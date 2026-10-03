@@ -17,7 +17,7 @@ Global input listening does not work in Wayland sessions. Use an X11 session for
 ## License :page_with_curl:
 [<img src="https://www.gnu.org/graphics/gplv3-127x51.png" alt="GPLv3" >](http://www.gnu.org/licenses/gpl-3.0.html)
 
-KeyJolt is licensed under the **GNU General Public License v3.0**. See the [LICENSE](https://github.com/LucasErrNotFound/key-jolt/main/LICENSE)
+KeyJolt is licensed under the **GNU General Public License v3.0**. See the [LICENSE](https://github.com/LucasErrNotFound/key-jolt/blob/main/LICENSE)
 file for details.
 
 ### What GPLv3 lets you do
@@ -32,6 +32,6 @@ file for details.
 - **State any changes** you made, with a date, in the modified files
 
 This is a plain-language summary, not legal advice. The full license text in the
-[LICENSE](https://github.com/LucasErrNotFound/key-jolt/main/LICENSE) file is what governs.
+[LICENSE](https://github.com/LucasErrNotFound/key-jolt/blob/main/LICENSE) file is what governs.
 
 For more information, visit https://www.gnu.org/licenses/gpl-3.0.html.
