@@ -1320,26 +1320,6 @@ fn key_identifier_for_layout(identifier: &str, layout_index: usize) -> Option<&'
     key_identifier(identifier)
 }
 
-fn filename_slug(name: &str) -> String {
-    let slug = name
-        .chars()
-        .map(|character| {
-            if character.is_ascii_alphanumeric() || character == '-' || character == '_' {
-                character.to_ascii_lowercase()
-            } else {
-                '-'
-            }
-        })
-        .collect::<String>()
-        .trim_matches('-')
-        .to_string();
-    if slug.is_empty() {
-        "preset".to_string()
-    } else {
-        slug
-    }
-}
-
 pub fn write_json_atomic<T: Serialize>(path: &Path, value: &T) -> Result<(), String> {
     let parent = path
         .parent()

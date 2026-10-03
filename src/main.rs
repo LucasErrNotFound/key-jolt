@@ -512,11 +512,11 @@ impl AppShell {
                             cx.notify();
                             cx.hide();
                         })),
-                        cx,
-                    );
-                    None
-                }
-            };
+                    cx,
+                );
+                None
+            }
+        };
         let (status_tx, status_rx) = mpsc::channel();
         let playback = PlaybackHandle::new(data_dir.clone(), &settings, status_tx.clone());
         if let Some(id) = settings.active_keyboard_preset_id.as_ref() {
@@ -677,8 +677,6 @@ impl AppShell {
                         }));
                     }
                 }
-
-                _ => {}
             },
         );
 
@@ -812,7 +810,7 @@ impl AppShell {
                         cx.notify();
                         cx.hide();
                     })),
-                    cx,
+                cx,
             );
             return;
         }
