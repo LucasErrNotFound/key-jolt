@@ -39,7 +39,7 @@ use view::home_view::{HomeEvent, HomeView, KeyboardPresetData, MousePresetData};
 use view::keyboard_editor::{KeyboardEditorEvent, KeyboardEditorView};
 use view::mouse_editor::{MouseEditorEvent, MouseEditorView};
 
-const GITHUB_REPOSITORY_URL: &str = "https://github.com/OWNER/REPO";
+const GITHUB_REPOSITORY_URL: &str = "https://github.com/LucasErrNotFound/key-jolt";
 
 struct AppTitleBar {
     appearance_picker: Entity<AppearancePicker>,
@@ -417,12 +417,21 @@ impl Render for AppTitleBar {
                             })),
                     )
                     .child(
-                        Button::new("github")
-                            .ghost()
-                            .icon(IconName::Github)
-                            .accessibility_label("Open KeyJolt on GitHub")
-                            .tooltip("GitHub repository")
-                            .on_click(|_, _, cx| cx.open_url(GITHUB_REPOSITORY_URL)),
+                        div()
+                            .on_mouse_down(MouseButton::Left, |_, window, cx| {
+                                window.prevent_default();
+                                cx.stop_propagation();
+                            })
+                            .child(
+                                Button::new("github")
+                                    .ghost()
+                                    .icon(IconName::Github)
+                                    .accessibility_label("Open KeyJolt on GitHub")
+                                    .tooltip("GitHub repository")
+                                    .on_click(|_, _, cx| {
+                                        cx.open_url(GITHUB_REPOSITORY_URL);
+                                    }),
+                            ),
                     ),
             )
     }
@@ -498,12 +507,16 @@ impl AppShell {
                     Notification::warning(format!("System tray unavailable: {error}"))
                         .title("System tray")
                         .placement(Anchor::BottomRight)
-                        .autohide(false),
-                    cx,
-                );
-                None
-            }
-        };
+                        .autohide(true)
+                        .on_click(cx.listener(|_, _, _, cx| {
+                            cx.notify();
+                            cx.hide();
+                        })),
+                        cx,
+                    );
+                    None
+                }
+            };
         let (status_tx, status_rx) = mpsc::channel();
         let playback = PlaybackHandle::new(data_dir.clone(), &settings, status_tx.clone());
         if let Some(id) = settings.active_keyboard_preset_id.as_ref() {
@@ -794,8 +807,12 @@ impl AppShell {
                 Notification::error(message)
                     .title("Theme change failed")
                     .placement(Anchor::BottomRight)
-                    .autohide(true),
-                cx,
+                    .autohide(true)
+                    .on_click(cx.listener(|_, _, _, cx| {
+                        cx.notify();
+                        cx.hide();
+                    })),
+                    cx,
             );
             return;
         }
@@ -963,7 +980,11 @@ impl AppShell {
                         Notification::success("The preset was deleted.")
                             .title("Preset deleted")
                             .placement(Anchor::BottomRight)
-                            .autohide(true),
+                            .autohide(true)
+                            .on_click(cx.listener(|_, _, _, cx| {
+                                cx.notify();
+                                cx.hide();
+                            })),
                         cx,
                     );
                 }
@@ -972,7 +993,11 @@ impl AppShell {
                         Notification::error(format!("Could not delete preset: {error}"))
                             .title("Preset deletion failed")
                             .placement(Anchor::BottomRight)
-                            .autohide(true),
+                            .autohide(true)
+                            .on_click(cx.listener(|_, _, _, cx| {
+                                cx.notify();
+                                cx.hide();
+                            })),
                         cx,
                     );
                 }
