@@ -1,0 +1,29 @@
+[package]
+name = "key-jolt"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+directories = "6.0.0"
+gpui-kit = "0.7.0"
+rdev = "0.5.3"
+rfd = "0.17.2"
+rodio = { version = "0.22.2", default-features = false, features = ["playback", "mp3", "wav", "flac", "vorbis", "mp4"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+tray-icon = "0.26.0"
+uuid = { version = "1.26.1", features = ["v4"] }
+zip = "8.6.0"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+macos-accessibility-client = "0.0.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+raw-window-handle = "0.6.2"
+windows-sys = { version = "0.61.2", features = ["Win32_UI_WindowsAndMessaging"] }
