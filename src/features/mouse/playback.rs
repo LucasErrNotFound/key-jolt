@@ -33,9 +33,7 @@ impl MouseEditorView {
             return;
         }
 
-        if current_count < 2 {
-            self.playback_mode = PlaybackMode::Sequential;
-        } else if previous_count < 2 {
+        if current_count < 2 || previous_count < 2 {
             self.playback_mode = PlaybackMode::Sequential;
         }
     }
