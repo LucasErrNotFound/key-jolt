@@ -2,8 +2,8 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::appearance::{AppearanceMode, DEFAULT_LIGHT_THEME_ID};
-use crate::storage::{STORAGE_VERSION, data_dir, write_json_atomic};
+use crate::persistence::{STORAGE_VERSION, data_dir, write_json_atomic};
+use crate::settings::appearance::{AppearanceMode, DEFAULT_LIGHT_THEME_ID};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AppSettings {

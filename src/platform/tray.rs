@@ -3,7 +3,7 @@ use std::sync::mpsc::Sender;
 use tray_icon::menu::{Menu, MenuEvent, MenuItem};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
 
-use super::RuntimeEvent;
+use crate::runtime::RuntimeEvent;
 
 pub fn create(sender: Sender<RuntimeEvent>) -> Result<TrayIcon, String> {
     let open = MenuItem::with_id("open-keyjolt", "Open KeyJolt", true, None);

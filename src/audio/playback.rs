@@ -8,8 +8,8 @@ use std::thread;
 
 use rodio::{Decoder, DeviceSinkBuilder, Player, Source, buffer::SamplesBuffer};
 
-use crate::settings_store::AppSettings;
-use crate::storage::{self, PlaybackMode, PresetKind};
+use crate::presets::{self, PlaybackMode, PresetKind};
+use crate::settings::store::AppSettings;
 
 enum Command {
     Reload(PresetKind, String),
@@ -80,7 +80,7 @@ impl PlaybackHandle {
                     active_players.retain(|player| !player.empty());
                     match command {
                         Command::Reload(kind, id) => {
-                            match storage::runtime_bindings(&root, kind, &id) {
+                            match presets::runtime_bindings(&root, kind, &id) {
                                 Ok(raw) => {
                                     bindings.retain(|key, _| {
                                         !key.starts_with(if kind == PresetKind::Keyboard {

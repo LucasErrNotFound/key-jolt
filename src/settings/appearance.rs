@@ -1,3 +1,4 @@
+use gpui_kit::SharedString;
 use serde::{Deserialize, Serialize};
 
 pub const DEFAULT_LIGHT_THEME_ID: &str = "Default Light";
@@ -30,7 +31,7 @@ pub fn default_theme_id(mode: AppearanceMode) -> &'static str {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ThemeDescriptor {
     pub id: String,
-    pub display_name: String,
+    pub display_name: SharedString,
     pub mode: AppearanceMode,
     pub family: String,
     pub is_default: bool,
@@ -58,27 +59,27 @@ struct ThemeMetadata {
 
 pub fn bundled_theme_sets() -> impl Iterator<Item = &'static str> {
     [
-        include_str!("../assets/themes/adventure.json"),
-        include_str!("../assets/themes/alduin.json"),
-        include_str!("../assets/themes/asciinema.json"),
-        include_str!("../assets/themes/aurora.json"),
-        include_str!("../assets/themes/ayu.json"),
-        include_str!("../assets/themes/catppuccin.json"),
-        include_str!("../assets/themes/everforest.json"),
-        include_str!("../assets/themes/fahrenheit.json"),
-        include_str!("../assets/themes/flexoki.json"),
-        include_str!("../assets/themes/gruvbox.json"),
-        include_str!("../assets/themes/harper.json"),
-        include_str!("../assets/themes/hybrid.json"),
-        include_str!("../assets/themes/jellybeans.json"),
-        include_str!("../assets/themes/kibble.json"),
-        include_str!("../assets/themes/macos-classic.json"),
-        include_str!("../assets/themes/mellifluous.json"),
-        include_str!("../assets/themes/molokai.json"),
-        include_str!("../assets/themes/solarized.json"),
-        include_str!("../assets/themes/spaceduck.json"),
-        include_str!("../assets/themes/tokyonight.json"),
-        include_str!("../assets/themes/twilight.json"),
+        include_str!("../../assets/themes/adventure.json"),
+        include_str!("../../assets/themes/alduin.json"),
+        include_str!("../../assets/themes/asciinema.json"),
+        include_str!("../../assets/themes/aurora.json"),
+        include_str!("../../assets/themes/ayu.json"),
+        include_str!("../../assets/themes/catppuccin.json"),
+        include_str!("../../assets/themes/everforest.json"),
+        include_str!("../../assets/themes/fahrenheit.json"),
+        include_str!("../../assets/themes/flexoki.json"),
+        include_str!("../../assets/themes/gruvbox.json"),
+        include_str!("../../assets/themes/harper.json"),
+        include_str!("../../assets/themes/hybrid.json"),
+        include_str!("../../assets/themes/jellybeans.json"),
+        include_str!("../../assets/themes/kibble.json"),
+        include_str!("../../assets/themes/macos-classic.json"),
+        include_str!("../../assets/themes/mellifluous.json"),
+        include_str!("../../assets/themes/molokai.json"),
+        include_str!("../../assets/themes/solarized.json"),
+        include_str!("../../assets/themes/spaceduck.json"),
+        include_str!("../../assets/themes/tokyonight.json"),
+        include_str!("../../assets/themes/twilight.json"),
     ]
     .into_iter()
 }
@@ -95,7 +96,7 @@ pub fn descriptors_from_theme_sets<'a>(
                 .into_iter()
                 .map(|theme| ThemeDescriptor {
                     id: theme.name.clone(),
-                    display_name: theme.name,
+                    display_name: theme.name.into(),
                     mode: theme.mode,
                     family: set.name.clone(),
                     is_default: theme.is_default,
@@ -158,7 +159,7 @@ mod tests {
     fn theme(id: &str, mode: AppearanceMode, family: &str, is_default: bool) -> ThemeDescriptor {
         ThemeDescriptor {
             id: id.to_string(),
-            display_name: id.to_string(),
+            display_name: id.into(),
             mode,
             family: family.to_string(),
             is_default,
