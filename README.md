@@ -1,6 +1,6 @@
 # KeyJolt
 
-KeyJolt adds custom sound feedback to keyboard presses and mouse clicks. Pick your own audio files, save them as presets, and keep the app running in the background while using other applications. Inspired by the *Welcome to the Game* franchise, it is built with GPUI-Kit.
+KeyJolt adds custom sound feedback to keyboard presses and mouse clicks. Pick your own audio files, save them as presets, and keep the app running in the background while using other applications. Built with GPUI-Kit.
 
 ## Features
 
