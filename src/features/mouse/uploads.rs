@@ -142,7 +142,6 @@ impl MouseEditorView {
             if self.files[index].preview_state == PreviewState::Playing {
                 cx.emit(MouseEditorEvent::StopPreviewRequested { file_id: Some(id) });
             }
-            let file = self.files.remove(index);
             self.upload_tasks.remove(&id);
             if self.hovered_file == Some(id) {
                 self.hovered_file = None;
