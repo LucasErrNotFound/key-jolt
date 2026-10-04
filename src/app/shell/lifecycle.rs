@@ -8,8 +8,6 @@ use crate::features::home::{HomeEvent, HomeView};
 use crate::input;
 use crate::platform::tray;
 use crate::platform::window::platform_notice;
-#[cfg(target_os = "windows")]
-use crate::platform::window::set_windows_window_visibility;
 use crate::presets::PresetKind;
 use crate::runtime::start_runtime_thread;
 use crate::settings::appearance;

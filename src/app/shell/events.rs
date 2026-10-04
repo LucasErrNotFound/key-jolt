@@ -2,8 +2,6 @@ use super::super::title_bar::AppTitleBarEvent;
 use super::{AppShell, AppShellEvent};
 
 use crate::features::home::HomeEvent;
-#[cfg(target_os = "windows")]
-use crate::platform::window::set_windows_window_visibility;
 use crate::presets::PresetKind;
 use crate::settings::appearance::{AppearanceSelection, pair_selection, resolve_selection};
 
