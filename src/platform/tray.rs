@@ -20,7 +20,7 @@ pub fn create(sender: Sender<RuntimeEvent>, cx: &App) -> Result<TrayIcon, String
         .as_bytes(0)
         .ok_or_else(|| "The app icon has no image frame".to_string())?
         .to_vec();
-    for pixel in pixels.chunks_exact_mut(4) {
+    for pixel in pixels.as_chunks_mut::<4>().0 {
         pixel.swap(0, 2);
     }
     let icon = Icon::from_rgba(pixels, width, height).map_err(|error| error.to_string())?;
