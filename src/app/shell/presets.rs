@@ -2,6 +2,7 @@ use super::{AppPage, AppShell, AppShellEvent};
 
 use crate::features::keyboard::KeyboardEditorView;
 use crate::features::mouse::MouseEditorView;
+use crate::platform::file_dialog::begin_file_dialog;
 use crate::presets::{KeyboardPresetData, MousePresetData, PresetKind};
 
 use gpui_kit::component::WindowExt;
@@ -15,6 +16,9 @@ impl AppShell {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        let Some((dialog_guard, dialog)) = begin_file_dialog(window) else {
+            return;
+        };
         let root = self.data_dir.clone();
         let window_handle = window.window_handle();
         let title = match kind {
@@ -23,11 +27,12 @@ impl AppShell {
         };
 
         cx.spawn(async move |this, cx| {
-            let file = rfd::AsyncFileDialog::new()
+            let file = dialog
                 .set_title(title)
                 .add_filter("KeyJolt preset", &["zip"])
                 .pick_file()
                 .await;
+            drop(dialog_guard);
             let Some(file) = file else {
                 return;
             };

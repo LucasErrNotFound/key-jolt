@@ -4,6 +4,7 @@ use super::model::AudioFile;
 use crate::features::preset_editor::{PreviewState, UploadState};
 
 use crate::features::preset_editor::{AUDIO_EXTENSIONS, is_audio_file};
+use crate::platform::file_dialog::begin_file_dialog;
 use gpui_kit::base::CheckboxState;
 use gpui_kit::component::WindowExt;
 use gpui_kit::component::notification::Notification;
@@ -127,14 +128,18 @@ impl KeyboardEditorView {
     }
 
     pub(super) fn open_file_picker(&self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some((dialog_guard, dialog)) = begin_file_dialog(window) else {
+            return;
+        };
         let window_handle = window.window_handle();
 
         cx.spawn(async move |this, cx| {
-            let files = rfd::AsyncFileDialog::new()
+            let files = dialog
                 .set_title("Select audio files")
                 .add_filter("Audio files", AUDIO_EXTENSIONS)
                 .pick_files()
                 .await;
+            drop(dialog_guard);
 
             let Some(files) = files else {
                 return;
