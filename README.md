@@ -1,4 +1,16 @@
+<div align="center">
+
+<img src="docs/images/key-jolt.png" alt="KeyJolt Logo" width="256"/>
+
 # KeyJolt
+
+*Shape the rhythm, command the silence, and make your machine speak*
+
+</div>
+
+---
+
+# Overview
 
 KeyJolt adds custom sound feedback to keyboard presses and mouse clicks. Pick your own audio files, save them as presets, and keep the app running in the background while using other applications. Built with GPUI-Kit.
 
