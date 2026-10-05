@@ -2,6 +2,12 @@
 name = "key-jolt"
 version = "0.1.0"
 edition = "2024"
+authors = ["LucasErrNotFound"]
+description = "Custom keyboard and mouse sound feedback with configurable presets, audio previews, and background playback."
+repository = "https://github.com/LucasErrNotFound/key-jolt"
+readme = "README.md"
+license-file = "LICENSE"
+publish = false
 
 [dependencies]
 directories = "6.0.0"
