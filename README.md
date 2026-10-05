@@ -73,7 +73,7 @@ An available audio output device is required
 
 ## Build from source
 
-Install current stable Rust with [rustup](https://rust-lang.org/tools/install/). Keep the repository's `Cargo.lock` and `assets/themes/`: dependencies are locked and themes are embedded during compilation. Consult the bundled GPUI Kit installation section of `docs/gpui-kit/llms-full.txt` for version-specific native requirements.
+Install current stable Rust with [rustup](https://rust-lang.org/tools/install/). Keep the repository's `Cargo.lock` and `assets/themes/`: dependencies are locked and themes are embedded during compilation. Consult the bundled GPUI Kit installation section of `docs/gpui-kit/llms-full.md` for version-specific native requirements.
 
 ### Windows
 
