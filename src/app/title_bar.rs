@@ -1,4 +1,5 @@
 use super::appearance_picker::AppearancePicker;
+use crate::app_assets::APP_ICON_PATH;
 use crate::settings::appearance::{AppearanceMode, AppearanceSelection, ThemeDescriptor};
 
 use gpui_kit::assets::IconName;
@@ -67,7 +68,18 @@ impl Render for AppTitleBar {
         let picker_focus = self.appearance_picker.focus_handle(cx);
 
         TitleBar::new()
-            .child(div().flex().items_center().child("KeyJolt"))
+            .child(
+                h_flex()
+                    .items_center()
+                    .gap_2()
+                    .child(
+                        img(APP_ICON_PATH)
+                            .size(rems(1.25))
+                            .flex_shrink_0()
+                            .object_fit(ObjectFit::Contain),
+                    )
+                    .child("KeyJolt"),
+            )
             .child(div().flex_1())
             .child(
                 h_flex()

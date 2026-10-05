@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <title>KeyJolt — joystick keycap</title>
+  <desc>A deliberately scruffy doodle of a three-dimensional warm gray keycap with a centered uppercase K turned counter-clockwise on its top surface. A crooked joystick overlaps the letter and holds a lumpy red ball. Wobbly doubled outlines and scattered small, medium, and moderately large scratches cover the keycap. Transparent background.</desc>
+  <g stroke="#303637" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M108 276 L160 248 L185 240 L224 216 Q229 207 241 220 L296 241 L325 258 L373 273 Q382 278 376 289 L397 337 L410 363 Q419 375 400 380 L360 404 L320 419 L265 447 Q257 458 245 448 L206 433 L168 409 L123 393 L83 374 Q72 371 83 355 L91 321 Z" fill="#BAB9AC" stroke-width="12"/>
+    <path d="M250 341 L309 313 L337 296 L375 279 L391 325 L411 369 Q414 378 399 381 L341 412 L312 421 L260 450 L254 404 Z" fill="#8A9693" stroke-width="9"/>
+    <path d="M94 354 L246 423 L259 449 L85 374 Q78 370 82 361 Z" fill="#A7AAA0" stroke="none"/>
+    <path d="M109 275 L155 251 L181 241 L225 215 Q229 208 239 219 L295 241 L327 259 L371 274 Q383 280 368 288 L329 309 L299 319 L263 342 Q254 351 243 340 L195 321 L166 305 L112 285 Q100 281 109 275 Z" fill="#E8E2CC" stroke-width="10"/>
+    <path d="M135 270 L174 252 L202 239 L230 229 Q234 224 240 232 L286 248 L314 264 L347 275 Q355 280 340 284 L305 302 L282 310 L261 326 Q253 329 243 320 L204 305 L174 291 L137 279" fill="#F2ECD8" stroke="#B4B9AA" stroke-width="5"/>
+    <path d="M137 278 L161 285 L185 299 L202 305 L226 317 L242 321" stroke="#FFFAE7" stroke-width="5"/>
+    <path id="keycap-letter-k" transform="matrix(1.2825 0.5805 -1.053 0.621 246.38 243.67) rotate(-90 24.5 34)" d="M0 0 H10 V27 L34 0 H47 L21 31 L49 68 H35 L10 35 V68 H0 Z" fill="#353B3B" stroke="none"/>
+    <path d="M106 307 L100 333 M111 344 L149 362 M164 369 L211 391" stroke="#D9D5C3" stroke-width="6"/>
+    <path d="M86 365 Q84 371 94 375 M375 283 L382 303" stroke="#303637" stroke-width="4"/>
+    <path d="M103 284 L93 309 L94 321 L82 349 L79 368 L91 381 L129 397 M228 211 L251 222 L279 232 M300 244 L330 254 L352 267 L378 275 M267 345 L259 366 L261 391 L257 418 L264 445 M371 391 L399 381 L415 368" stroke="#303637" stroke-width="3"/>
+    <g id="keycap-scratches" stroke="#8A9180" stroke-opacity="0.75">
+      <path d="M160 266 L172 261 L181 262 L187 256" stroke-width="3"/>
+      <path d="M216 243 Q219 246 226 245" stroke-width="1.6"/>
+      <path d="M312 263 L306 269 L304 276 L299 279" stroke-width="2.4"/>
+      <path d="M329 287 L335 284" stroke-width="1.8"/>
+      <path d="M313 304 Q319 302 324 294 L333 289" stroke-width="3.1"/>
+      <path d="M190 303 L195 303" stroke-width="1.5"/>
+      <path d="M250 316 L244 317 L236 324" stroke-width="2.2"/>
+    </g>
+    <g stroke="#777E73" stroke-opacity="0.85">
+      <path d="M120 320 Q118 332 123 337 L125 344" stroke-width="3"/>
+      <path d="M149 335 L157 341 L162 342 L169 350" stroke-width="2.6"/>
+      <path d="M204 365 L201 371" stroke-width="2.7"/>
+      <path d="M100 359 L106 357 L108 359" stroke-width="1.6"/>
+      <path d="M145 389 L156 392 L166 389" stroke-width="2.3"/>
+      <path d="M183 411 Q190 403 191 396 L197 385" stroke-width="3.2"/>
+      <path d="M215 407 L221 412 L224 418 L226 424" stroke-width="2.5"/>
+      <path d="M135 366 L139 363" stroke-width="1.5"/>
+      <path d="M232 386 L231 391" stroke-width="2"/>
+    </g>
+    <g stroke="#4E6763" stroke-opacity="0.8">
+      <path d="M278 353 L285 356 L294 352 L301 353" stroke-width="2.8"/>
+      <path d="M327 327 Q321 336 322 344 L318 352" stroke-width="3.2"/>
+      <path d="M363 322 L370 323" stroke-width="1.6"/>
+      <path d="M389 358 L384 363 L381 371 L383 375" stroke-width="2.5"/>
+      <path d="M351 390 L341 388 L334 391 L324 388" stroke-width="3.3"/>
+      <path d="M284 416 Q290 408 291 402 L294 399" stroke-width="2.7"/>
+      <path d="M270 379 Q275 382 276 386" stroke-width="1.8"/>
+      <path d="M355 356 L357 352" stroke-width="1.5"/>
+      <path d="M308 376 L314 372" stroke-width="2.2"/>
+    </g>
+    <path d="M263 262 Q289 264 319 282 Q325 287 314 293 L289 304 L248 285 Z" fill="#929D96" fill-opacity="0.32" stroke="none"/>
+    <path d="M219 275 C224 263 246 261 265 266 C288 271 291 283 270 290 C250 297 224 289 219 281 Z" fill="#8A9490" stroke-width="5"/>
+    <path d="M231 275 C237 268 255 268 268 274 C279 279 268 286 253 286 C241 285 232 281 231 275 Z" fill="#3F504F" stroke-width="3"/>
+    <path d="M285 151 L309 162 L301 187 L289 209 L284 232 L272 251 L268 276 Q262 287 248 279 Q239 277 245 267 L252 244 L264 221 L270 197 Z" fill="#C7D3CD" stroke-width="11"/>
+    <path d="M301 166 L294 189 L284 212 L280 232 L269 251 L264 272 L256 276" stroke="#7D918C" stroke-width="8"/>
+    <path d="M286 174 L261 244" stroke="#F4EEE0" stroke-width="5"/>
+    <path d="M223 283 Q245 300 271 289" stroke="#596B66" stroke-width="5"/>
+    <path d="M279 182 L267 212 L263 232 M242 273 Q241 288 259 286 M221 271 Q212 279 222 287 L232 292" stroke="#303637" stroke-width="3"/>
+    <path d="M306 59 Q323 54 334 63 Q352 65 355 84 Q371 92 364 111 Q373 131 356 144 Q352 163 331 165 Q318 180 299 174 Q278 181 268 165 Q250 160 250 140 Q236 125 246 108 Q239 90 257 81 Q263 63 282 65 Q294 51 306 59 Z" fill="#D95748" stroke-width="12"/>
+    <path d="M340 70 C361 89 366 112 355 135 C347 157 321 174 296 171 C284 169 273 163 267 154 C289 161 311 159 330 144 C352 127 352 94 340 70 Z" fill="#AC3E39" stroke="none"/>
+    <path d="M270 105 C272 88 285 75 303 73 C315 73 325 79 330 86 C315 80 300 83 290 93 C280 102 276 113 277 121 C269 119 268 111 270 105 Z" fill="#EA8A70" stroke="none"/>
+    <path d="M275 94 L278 86 L286 83 L291 77 L298 79" stroke="#F4B89A" stroke-width="8"/>
+    <path d="M344 117 Q342 138 327 147" stroke="#873E39" stroke-width="4"/>
+    <path d="M255 111 Q251 126 258 138 M314 174 L329 169" stroke="#303637" stroke-width="3"/>
+    <path d="M254 85 L243 96 L245 116 L241 130 L251 145 M278 62 L290 54 L307 56 M329 61 L349 69 L362 83 M362 126 L360 141 L347 150 L342 163 L318 179 L302 178" stroke="#303637" stroke-width="3"/>
+    <path d="M335 118 L329 133 L337 129 L322 147 L333 142 L316 155 M343 119 L337 139 L344 134 L329 153 M292 158 L304 166 L318 164" stroke="#873E39" stroke-width="3"/>
+    <path d="M256 96 L261 83 M264 144 L271 156 M307 65 L317 63" stroke="#EF967A" stroke-width="3"/>
+  </g>
+</svg>

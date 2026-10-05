@@ -8,7 +8,7 @@ use crate::settings::appearance::{AppearanceMode, AppearanceSelection, resolve_s
 
 use crate::settings::catalog::{apply_theme, load_theme_catalog};
 
-use gpui_kit::component::{Root, TitleBar};
+use gpui_kit::component::TitleBar;
 
 use gpui_kit::*;
 use std::sync::Arc;
@@ -50,7 +50,7 @@ pub(crate) fn run() {
 
                     let locked_size = size(px(620.0), px(900.0));
 
-                    cx.open_window(
+                    gpui_kit::open_window(
                         WindowOptions {
                             window_bounds: Some(WindowBounds::Windowed(bounds)),
                             window_min_size: Some(locked_size),
@@ -58,6 +58,7 @@ pub(crate) fn run() {
                             icon: None,
                             ..TitleBar::window_options()
                         },
+                        cx,
                         move |window, cx| {
                             window.on_window_should_close(cx, move |_window, _cx| {
                                 if close_tray_available.load(Ordering::Acquire) {
@@ -71,7 +72,7 @@ pub(crate) fn run() {
                                 }
                             });
                             let home = HomeView::view(startup, window, cx);
-                            let app = cx.new(|cx| {
+                            cx.new(|cx| {
                                 AppShell::new(
                                     home,
                                     tray_available,
@@ -80,9 +81,7 @@ pub(crate) fn run() {
                                     window,
                                     cx,
                                 )
-                            });
-
-                            cx.new(|cx| Root::new(app, window, cx))
+                            })
                         },
                     )
                     .expect("open window");

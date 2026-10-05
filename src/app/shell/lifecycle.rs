@@ -55,13 +55,14 @@ impl AppShell {
         );
         let settings_generation = Arc::new(AtomicU64::new(0));
         let (runtime_tx, runtime_rx) = mpsc::channel();
-        let tray_icon = match tray::create(runtime_tx.clone()) {
+        let mut startup_notifications = Vec::new();
+        let tray_icon = match tray::create(runtime_tx.clone(), cx) {
             Ok(icon) => {
                 tray_available.store(true, Ordering::Release);
                 Some(icon)
             }
             Err(error) => {
-                window.push_notification(
+                startup_notifications.push(
                     Notification::warning(format!("System tray unavailable: {error}"))
                         .title("System tray")
                         .placement(Anchor::BottomRight)
@@ -70,7 +71,6 @@ impl AppShell {
                             cx.notify();
                             cx.hide();
                         })),
-                    cx,
                 );
                 None
             }
@@ -95,8 +95,8 @@ impl AppShell {
         );
         let startup_warnings = home.read(cx).startup_warnings().to_vec();
         for message in startup_warnings {
-            window.push_notification(
-                Notification::warning(message.clone())
+            startup_notifications.push(
+                Notification::warning(message)
                     .title("Preset or settings warning")
                     .placement(Anchor::BottomRight)
                     .autohide(true)
@@ -104,11 +104,10 @@ impl AppShell {
                         cx.notify();
                         cx.hide();
                     })),
-                cx,
             );
         }
         if let Some(message) = platform_notice() {
-            window.push_notification(
+            startup_notifications.push(
                 Notification::warning(message)
                     .title("Global input access")
                     .placement(Anchor::BottomRight)
@@ -117,8 +116,15 @@ impl AppShell {
                         cx.notify();
                         cx.hide();
                     })),
-                cx,
             );
+        }
+
+        if !startup_notifications.is_empty() {
+            cx.defer_in(window, move |_, window, cx| {
+                for notification in startup_notifications {
+                    window.push_notification(notification, cx);
+                }
+            });
         }
 
         let home_subscription =

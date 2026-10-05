@@ -4,6 +4,7 @@ use super::components::{render_delete_confirmation, render_volume_control};
 
 use super::preset_summary::PresetSummary;
 
+use crate::app_assets::APP_ICON_PATH;
 use crate::presets::PresetKind;
 use gpui_kit::assets::IconName;
 use gpui_kit::component::button::{Button, ButtonVariants};
@@ -16,15 +17,28 @@ use gpui_kit::component::*;
 use gpui_kit::*;
 
 impl HomeView {
-    pub(super) fn render_header(&self) -> impl IntoElement {
-        v_flex()
+    pub(super) fn render_header(&self, cx: &App) -> impl IntoElement {
+        h_flex()
+            .items_center()
             .gap_4()
-            .child(Label::new("KeyJolt").text_size(rems(2.2)).font_extrabold())
             .child(
-                Label::new(
-                    "A simple remapping tool to produce sound feedback for every keystroke and click.",
-                )
-                .text_lg(),
+                img(APP_ICON_PATH)
+                    .size(rems(4.0))
+                    .flex_shrink_0()
+                    .object_fit(ObjectFit::Contain),
+            )
+            .child(
+                v_flex()
+                    .flex_1()
+                    .min_w_0()
+                    .gap_1()
+                    .child(Label::new("KeyJolt").text_size(rems(2.2)).font_extrabold())
+                    .child(
+                        div()
+                            .text_base()
+                            .text_color(cx.theme().muted_foreground)
+                            .child("Custom sound feedback for every keystroke and click."),
+                    ),
             )
     }
 
@@ -290,7 +304,7 @@ impl Render for HomeView {
             .pt_6()
             .pb_6()
             .gap_12()
-            .child(self.render_header())
+            .child(self.render_header(cx))
             .child(self.render_app_status(cx))
             .child(self.render_keyboard_presets(cx))
             .child(self.render_mouse_section(cx))
