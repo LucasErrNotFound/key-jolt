@@ -21,8 +21,9 @@ pub(super) struct AppTitleBar {
 
 #[derive(Clone, Debug)]
 pub(super) enum AppTitleBarEvent {
-    ModeSelected(AppearanceMode),
-    ThemeSelected(String),
+    Mode(AppearanceMode),
+    Theme(String),
+    RunAtStartup(bool),
 }
 
 impl EventEmitter<AppTitleBarEvent> for AppTitleBar {}
@@ -31,11 +32,12 @@ impl AppTitleBar {
     pub(super) fn new(
         themes: Vec<ThemeDescriptor>,
         selection: AppearanceSelection,
+        run_at_startup: bool,
         error_message: Option<String>,
         cx: &mut Context<Self>,
     ) -> Self {
-        let appearance_picker =
-            cx.new(|cx| AppearancePicker::new(themes, selection, error_message, cx));
+        let appearance_picker = cx
+            .new(|cx| AppearancePicker::new(themes, selection, run_at_startup, error_message, cx));
         let picker_subscription =
             cx.subscribe(&appearance_picker, |_, _, event: &AppTitleBarEvent, cx| {
                 cx.emit(event.clone());
@@ -46,6 +48,12 @@ impl AppTitleBar {
             popover_open: false,
             _picker_subscription: picker_subscription,
         }
+    }
+
+    pub(super) fn set_startup_state(&mut self, enabled: bool, busy: bool, cx: &mut Context<Self>) {
+        self.appearance_picker.update(cx, |picker, cx| {
+            picker.set_startup_state(enabled, busy, cx);
+        });
     }
 
     pub(super) fn set_selection(&mut self, selection: AppearanceSelection, cx: &mut Context<Self>) {

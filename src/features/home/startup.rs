@@ -22,6 +22,10 @@ impl HomeStartup {
         }
     }
 
+    pub(crate) fn add_startup_warning(&mut self, warning: String) {
+        self.startup_warnings.push(warning);
+    }
+
     pub(crate) fn settings(&self) -> &AppSettings {
         &self.settings
     }

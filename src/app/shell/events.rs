@@ -70,6 +70,7 @@ impl AppShell {
                 let mouse_changed =
                     self.settings.active_mouse_preset_id != settings.active_mouse_preset_id;
                 let mut settings = settings.clone();
+                settings.run_at_startup = self.settings.run_at_startup;
                 settings.appearance_mode = self.settings.appearance_mode;
                 settings.appearance_theme_id = self.settings.appearance_theme_id.clone();
                 self.settings = settings.clone();
@@ -101,7 +102,10 @@ impl AppShell {
         cx: &mut Context<Self>,
     ) {
         match event {
-            AppTitleBarEvent::ModeSelected(mode) => {
+            AppTitleBarEvent::RunAtStartup(enabled) => {
+                self.set_run_at_startup(*enabled, window, cx);
+            }
+            AppTitleBarEvent::Mode(mode) => {
                 let selection = pair_selection(
                     &AppearanceSelection {
                         mode: self.settings.appearance_mode,
@@ -115,7 +119,7 @@ impl AppShell {
                     self.apply_appearance(selection, window, cx);
                 }
             }
-            AppTitleBarEvent::ThemeSelected(theme_id) => {
+            AppTitleBarEvent::Theme(theme_id) => {
                 if let Some(theme) = self.themes.iter().find(|theme| &theme.id == theme_id) {
                     let selection = AppearanceSelection {
                         mode: theme.mode,

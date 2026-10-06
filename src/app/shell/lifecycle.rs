@@ -19,7 +19,7 @@ use gpui_kit::component::WindowExt;
 use gpui_kit::component::notification::Notification;
 use gpui_kit::*;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, mpsc};
+use std::sync::{Arc, Mutex, mpsc};
 
 impl AppShell {
     pub(in crate::app) fn new(
@@ -44,8 +44,15 @@ impl AppShell {
         });
         settings.appearance_mode = selection.mode;
         settings.appearance_theme_id = selection.theme_id.clone();
-        let title_bar =
-            cx.new(|cx| AppTitleBar::new(themes.clone(), selection, appearance_error, cx));
+        let title_bar = cx.new(|cx| {
+            AppTitleBar::new(
+                themes.clone(),
+                selection,
+                settings.run_at_startup,
+                appearance_error,
+                cx,
+            )
+        });
         let title_bar_subscription = cx.subscribe_in(
             &title_bar,
             window,
@@ -54,6 +61,9 @@ impl AppShell {
             },
         );
         let settings_generation = Arc::new(AtomicU64::new(0));
+        let settings_writer = Arc::new(Mutex::new(super::settings_persistence::SettingsWriter {
+            run_at_startup: settings.run_at_startup,
+        }));
         let (runtime_tx, runtime_rx) = mpsc::channel();
         let mut startup_notifications = Vec::new();
         let tray_icon = match tray::create(runtime_tx.clone(), cx) {
@@ -149,6 +159,8 @@ impl AppShell {
             _delete_task: None,
             _settings_task: None,
             settings_generation,
+            settings_writer,
+            startup_change_pending: false,
             themes,
             playback,
             _tray_icon: tray_icon,

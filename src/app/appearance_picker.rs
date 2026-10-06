@@ -4,7 +4,7 @@ use crate::settings::appearance::{AppearanceMode, AppearanceSelection, ThemeDesc
 use gpui_kit::assets::IconName;
 use gpui_kit::base::{h_flex, v_flex};
 
-use gpui_kit::component::{ActiveTheme as _, Selectable as _};
+use gpui_kit::component::{ActiveTheme as _, Disableable as _, Selectable as _};
 
 use gpui_kit::component::button::{Button, ButtonVariants};
 
@@ -17,6 +17,8 @@ pub(super) struct AppearancePicker {
     focus_handle: FocusHandle,
     selection: AppearanceSelection,
     themes: Vec<ThemeDescriptor>,
+    run_at_startup: bool,
+    startup_busy: bool,
     pub(super) error_message: Option<SharedString>,
 }
 
@@ -32,6 +34,7 @@ impl AppearancePicker {
     pub(super) fn new(
         themes: Vec<ThemeDescriptor>,
         selection: AppearanceSelection,
+        run_at_startup: bool,
         error_message: Option<String>,
         cx: &mut Context<Self>,
     ) -> Self {
@@ -39,8 +42,16 @@ impl AppearancePicker {
             focus_handle: cx.focus_handle(),
             selection,
             themes,
+            run_at_startup,
+            startup_busy: false,
             error_message: error_message.map(Into::into),
         }
+    }
+
+    pub(super) fn set_startup_state(&mut self, enabled: bool, busy: bool, cx: &mut Context<Self>) {
+        self.run_at_startup = enabled;
+        self.startup_busy = busy;
+        cx.notify();
     }
 
     pub(super) fn set_selection(&mut self, selection: AppearanceSelection, cx: &mut Context<Self>) {
@@ -89,7 +100,7 @@ impl Render for AppearancePicker {
                             ),
                     )
                     .on_click(cx.listener(move |_, _, _, cx| {
-                        cx.emit(AppTitleBarEvent::ThemeSelected(theme_id.clone()));
+                        cx.emit(AppTitleBarEvent::Theme(theme_id.clone()));
                     }))
             })
             .collect::<Vec<_>>();
@@ -110,11 +121,46 @@ impl Render for AppearancePicker {
                             .accessibility_label("Dark mode")
                             .on_change(cx.listener(|this, dark, _, cx| {
                                 if *dark != (this.selection.mode == AppearanceMode::Dark) {
-                                    cx.emit(AppTitleBarEvent::ModeSelected(
-                                        this.selection.mode.opposite(),
-                                    ));
+                                    cx.emit(AppTitleBarEvent::Mode(this.selection.mode.opposite()));
                                 }
                             })),
+                    ),
+            )
+            .child(
+                v_flex()
+                    .gap_1()
+                    .child(
+                        h_flex()
+                            .items_center()
+                            .gap_3()
+                            .child("Run at startup")
+                            .child(div().flex_1())
+                            .child(
+                                Switch::new("run-at-startup")
+                                    .checked(self.run_at_startup)
+                                    .disabled(
+                                        self.startup_busy
+                                            || !crate::platform::startup::is_supported(),
+                                    )
+                                    .accessibility_label("Run KeyJolt at startup")
+                                    .on_change(cx.listener(|this, enabled, _, cx| {
+                                        if !this.startup_busy && *enabled != this.run_at_startup {
+                                            cx.emit(AppTitleBarEvent::RunAtStartup(*enabled));
+                                        }
+                                    })),
+                            ),
+                    )
+                    .child(
+                        div()
+                            .text_sm()
+                            .text_color(cx.theme().muted_foreground)
+                            .child(if self.startup_busy {
+                                "Saving startup preference…"
+                            } else if crate::platform::startup::is_supported() {
+                                "Start in the system tray when you sign in."
+                            } else {
+                                "Available on Windows."
+                            }),
                     ),
             )
             .child(

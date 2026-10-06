@@ -1,6 +1,7 @@
 use super::shell::AppShell;
 use crate::app_assets::AppAssets;
 use crate::features::home::{HomeStartup, HomeView};
+use crate::platform::startup;
 #[cfg(target_os = "windows")]
 use crate::platform::window::set_windows_window_visibility;
 use crate::settings::appearance;
@@ -15,13 +16,30 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub(crate) fn run() {
+    let launched_at_login = startup::launched_at_login();
     gpui_kit::application()
         .with_assets(AppAssets)
         .with_quit_mode(QuitMode::LastWindowClosed)
-        .run(|cx: &mut App| {
+        .run(move |cx: &mut App| {
             gpui_kit::init(cx);
             cx.spawn(async move |cx| {
-                let startup = cx.background_spawn(async { HomeStartup::load() }).await;
+                let startup = cx
+                    .background_spawn(async move {
+                        let mut loaded = HomeStartup::load();
+                        if startup::is_supported()
+                            && !launched_at_login
+                            && let Err(error) =
+                                startup::set_enabled(loaded.settings().run_at_startup)
+                        {
+                            loaded.add_startup_warning(error);
+                        }
+                        loaded
+                    })
+                    .await;
+                if launched_at_login && !startup.settings().run_at_startup {
+                    cx.update(|cx| cx.quit());
+                    return;
+                }
                 cx.update(move |cx| {
                     let (themes, mut appearance_errors) = load_theme_catalog(cx);
                     let startup_settings = startup.settings();
@@ -49,12 +67,15 @@ pub(crate) fn run() {
                     let bounds = Bounds::centered(None, size(px(620.), px(900.)), cx);
 
                     let locked_size = size(px(620.0), px(900.0));
+                    let shell_tray_available = tray_available.clone();
 
-                    gpui_kit::open_window(
+                    let (window_handle, _) = gpui_kit::open_window(
                         WindowOptions {
                             window_bounds: Some(WindowBounds::Windowed(bounds)),
                             window_min_size: Some(locked_size),
                             is_resizable: false,
+                            show: !launched_at_login,
+                            focus: !launched_at_login,
                             icon: None,
                             ..TitleBar::window_options()
                         },
@@ -75,7 +96,7 @@ pub(crate) fn run() {
                             cx.new(|cx| {
                                 AppShell::new(
                                     home,
-                                    tray_available,
+                                    shell_tray_available.clone(),
                                     themes.clone(),
                                     appearance_error.clone(),
                                     window,
@@ -86,7 +107,14 @@ pub(crate) fn run() {
                     )
                     .expect("open window");
 
-                    cx.activate(true);
+                    if !launched_at_login || !tray_available.load(Ordering::Acquire) {
+                        let _ = window_handle.update(cx, |_, window, _| {
+                            #[cfg(target_os = "windows")]
+                            set_windows_window_visibility(window, true);
+                            window.activate_window();
+                        });
+                        cx.activate(true);
+                    }
                 });
             })
             .detach();

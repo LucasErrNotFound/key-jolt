@@ -5,6 +5,7 @@ mod presets;
 mod preview;
 mod runtime;
 mod settings;
+mod settings_persistence;
 
 use super::title_bar::AppTitleBar;
 use crate::audio::playback::PlaybackHandle;
@@ -18,8 +19,8 @@ use crate::settings::store::AppSettings;
 use gpui_kit::base::v_flex;
 use gpui_kit::*;
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
 
 use std::thread::JoinHandle;
 
@@ -38,6 +39,8 @@ pub(super) struct AppShell {
     _delete_task: Option<Task<()>>,
     _settings_task: Option<Task<()>>,
     settings_generation: Arc<AtomicU64>,
+    settings_writer: Arc<Mutex<settings_persistence::SettingsWriter>>,
+    startup_change_pending: bool,
     themes: Vec<ThemeDescriptor>,
     playback: PlaybackHandle,
     _tray_icon: Option<tray_icon::TrayIcon>,
