@@ -13,6 +13,8 @@ pub struct AppSettings {
     pub mouse_volume: f32,
     pub mouse_muted: bool,
     pub app_enabled: bool,
+    #[serde(default)]
+    pub run_at_startup: bool,
     pub active_keyboard_preset_id: Option<String>,
     pub active_mouse_preset_id: Option<String>,
     #[serde(default)]
@@ -34,6 +36,7 @@ impl Default for AppSettings {
             mouse_volume: 50.0,
             mouse_muted: false,
             app_enabled: true,
+            run_at_startup: false,
             active_keyboard_preset_id: Some("cherry-mx-blue".to_string()),
             active_mouse_preset_id: Some("mouse-sounds".to_string()),
             appearance_mode: AppearanceMode::default(),
@@ -148,8 +151,14 @@ mod tests {
         let mut settings = AppSettings::default();
         save_to(&root, &settings).unwrap();
         settings.keyboard_volume = 120.0;
+        settings.run_at_startup = true;
         save_to(&root, &settings).unwrap();
-        assert_eq!(load_from(&root).unwrap().keyboard_volume, 120.0);
+        let loaded = load_from(&root).unwrap();
+        assert_eq!(loaded.keyboard_volume, 120.0);
+        assert!(loaded.run_at_startup);
+        settings.run_at_startup = false;
+        save_to(&root, &settings).unwrap();
+        assert!(!load_from(&root).unwrap().run_at_startup);
         let _ = std::fs::remove_dir_all(root);
     }
 
@@ -159,6 +168,7 @@ mod tests {
 
         let settings: AppSettings = serde_json::from_str(json).unwrap();
 
+        assert!(!settings.run_at_startup);
         assert_eq!(settings.appearance_mode, AppearanceMode::Light);
         assert_eq!(settings.appearance_theme_id, DEFAULT_LIGHT_THEME_ID);
     }
