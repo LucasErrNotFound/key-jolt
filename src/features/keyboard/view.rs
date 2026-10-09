@@ -113,16 +113,19 @@ impl Render for KeyboardEditorView {
                     .child(
                         h_flex()
                             .items_center()
+                            .flex_wrap()
                             .gap_2()
                             .child(Self::render_hint("Click", cx))
                             .child(
-                                Label::new("select key")
+                                Label::new("select one key")
                                     .text_sm()
                                     .text_color(cx.theme().muted_foreground),
                             )
-                            .child(Self::render_kbd_hint("esc", cx))
+                            .child(Self::render_kbd_hint("ctrl", cx))
+                            .child(Label::new("+").text_sm())
+                            .child(Self::render_hint("Click", cx))
                             .child(
-                                Label::new("clear")
+                                Label::new("add or remove keys")
                                     .text_sm()
                                     .text_color(cx.theme().muted_foreground),
                             )
@@ -142,6 +145,7 @@ impl Render for KeyboardEditorView {
                             ),
                     )
                     .child(self.render_keyboard_area(cx))
+                    .child(self.render_assignment_legend(cx))
                     .child(Separator::horizontal())
                     .child(self.render_selection_controls(cx))
                     .child(
@@ -160,7 +164,7 @@ impl Render for KeyboardEditorView {
                                     )
                                     .child(
                                         Label::new(
-                                            "Selecting a key updates its match in every layout.",
+                                            "Sync key selection and sound edits across matching keys. Existing mappings are kept.",
                                         )
                                         .text_sm()
                                         .text_color(cx.theme().muted_foreground),
@@ -186,8 +190,8 @@ impl Render for KeyboardEditorView {
                                 )
                                 .child(
                                     Label::new(format!(
-                                        "Files apply to all {} selected keys.",
-                                        selected_count
+                                        "Assign sounds to this selection · {} keys mapped.",
+                                        self.mapped_key_count()
                                     ))
                                     .text_sm()
                                     .text_color(cx.theme().muted_foreground),

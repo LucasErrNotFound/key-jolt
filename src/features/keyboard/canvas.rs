@@ -1,4 +1,5 @@
 use super::KeyboardEditorView;
+use super::assignment::{AssignmentGroups, assignment_groups};
 use super::layout::{
     FULL_NUMPAD_ROW_1, FULL_NUMPAD_ROW_2, FULL_NUMPAD_ROW_3, FULL_NUMPAD_ROW_4, FULL_NUMPAD_ROW_5,
     KeySpec, KeyboardLayout, ROW_1, ROW_2, ROW_3, ROW_4, ROW_5, ROW_6, TKL_FUNCTION_ROW,
@@ -10,11 +11,83 @@ use gpui_kit::component::button::{Button, ButtonCustomVariant, ButtonVariants};
 
 use gpui_kit::component::kbd::Kbd;
 use gpui_kit::component::scroll::ScrollableElement;
+use gpui_kit::component::tooltip::Tooltip;
 use gpui_kit::component::*;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
 impl KeyboardEditorView {
+    fn assignment_groups(&self) -> AssignmentGroups {
+        assignment_groups(self.files.iter().map(|file| {
+            (
+                file.id,
+                file.assigned_keys[self.keyboard_layout.index()].as_slice(),
+            )
+        }))
+    }
+
+    fn assignment_color(index: usize, cx: &App) -> Hsla {
+        let theme = cx.theme();
+        let colors = [
+            theme.green,
+            theme.magenta,
+            theme.cyan,
+            theme.yellow,
+            theme.blue,
+            theme.red,
+        ];
+        colors[index % colors.len()]
+    }
+
+    fn assignment_sound_names(&self, sounds: &[u64]) -> String {
+        let mut names = self
+            .files
+            .iter()
+            .filter(|file| sounds.contains(&file.id))
+            .map(|file| file.name.to_string())
+            .collect::<Vec<_>>();
+        names.sort();
+        names.join(", ")
+    }
+
+    pub(super) fn render_assignment_legend(&self, cx: &App) -> impl IntoElement {
+        let groups = self.assignment_groups();
+        v_flex()
+            .w_full()
+            .gap_1()
+            .child(
+                div()
+                    .text_xs()
+                    .text_color(cx.theme().muted_foreground)
+                    .child("Tinted keys share sounds. A stronger outline marks selected keys."),
+            )
+            .child(
+                h_flex()
+                    .flex_wrap()
+                    .gap_2()
+                    .children(groups.sounds.iter().enumerate().map(|(index, sounds)| {
+                        let names = self.assignment_sound_names(sounds);
+                        let tooltip: SharedString = format!("G{} · {}", index + 1, names).into();
+                        h_flex()
+                            .id(format!("assignment-group-{index}"))
+                            .items_center()
+                            .gap_1()
+                            .text_xs()
+                            .tooltip(move |window, cx| {
+                                Tooltip::new(tooltip.clone()).build(window, cx)
+                            })
+                            .child(
+                                div()
+                                    .size(rems(0.5))
+                                    .rounded_full()
+                                    .bg(Self::assignment_color(index, cx)),
+                            )
+                            .child(format!("G{}", index + 1))
+                            .child(div().max_w(rems(12.0)).truncate().child(names))
+                    })),
+            )
+    }
+
     pub(super) fn render_keyboard(&self, cx: &mut Context<Self>) -> AnyElement {
         match self.keyboard_layout {
             KeyboardLayout::FullSize => self.render_full_size_keyboard(cx).into_any_element(),
@@ -45,6 +118,7 @@ impl KeyboardEditorView {
         row: &[KeySpec],
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
+        let groups = self.assignment_groups();
         h_flex().w_full().gap_1().children(row.iter().map(|key| {
             if key.id.starts_with("nav_up_spacer") {
                 return div()
@@ -54,9 +128,20 @@ impl KeyboardEditorView {
             }
 
             let selected = self.is_selected(key.id);
+            let group = groups
+                .keys
+                .get(crate::presets::canonical_key_identifier(key.id))
+                .copied();
+            let color = group.map(|index| Self::assignment_color(index, cx));
             let key_id = key.id;
 
-            let button_variant = if selected {
+            let button_variant = if let Some(color) = color {
+                ButtonCustomVariant::new(cx)
+                    .color(color.opacity(0.14))
+                    .foreground(cx.theme().foreground)
+                    .hover(color.opacity(0.2))
+                    .active(color.opacity(0.24))
+            } else if selected {
                 ButtonCustomVariant::new(cx)
                     .color(cx.theme().primary.opacity(0.08))
                     .foreground(cx.theme().primary)
@@ -76,15 +161,48 @@ impl KeyboardEditorView {
                 .border_color(if selected {
                     cx.theme().primary
                 } else {
-                    cx.theme().muted_foreground.opacity(0.3)
+                    color.unwrap_or(cx.theme().muted_foreground.opacity(0.3))
                 })
+                .when(selected, |button| button.border_2())
                 .w(rems((key.width) / 16.0))
                 .h(rems(2.125))
                 .px_0()
                 .text_size(rems(0.75))
-                .label(key.label)
-                .on_click(cx.listener(move |this, _event, _window, cx| {
-                    this.toggle_key(key_id, cx);
+                .child(
+                    v_flex()
+                        .items_center()
+                        .justify_center()
+                        .text_size(rems(0.75))
+                        .child(key.label)
+                        .when_some(group, |label, index| {
+                            label.child(div().text_size(rems(0.5)).child(format!("G{}", index + 1)))
+                        }),
+                )
+                .accessibility_label(match group {
+                    Some(index) => format!(
+                        "{} · G{} · {}{}",
+                        key.label,
+                        index + 1,
+                        self.assignment_sound_names(&groups.sounds[index]),
+                        if selected { " · selected" } else { "" }
+                    ),
+                    None => format!(
+                        "{} · no sound assigned{}",
+                        key.label,
+                        if selected { " · selected" } else { "" }
+                    ),
+                })
+                .tooltip(match group {
+                    Some(index) => format!(
+                        "{} · G{} · {}",
+                        key.label,
+                        index + 1,
+                        self.assignment_sound_names(&groups.sounds[index])
+                    ),
+                    None => format!("{} · no sound assigned", key.label),
+                })
+                .on_click(cx.listener(move |this, event: &ClickEvent, _window, cx| {
+                    this.select_key(key_id, event.modifiers().control, cx);
                 }))
                 .into_any_element()
         }))
@@ -210,8 +328,8 @@ impl KeyboardEditorView {
                     .selected(active)
                     .when(active, |button| button.primary())
                     .when(!active, |button| button.outline())
-                    .on_click(cx.listener(move |this, _, _, cx| {
-                        this.toggle_selection_group(group_id, &keys, cx);
+                    .on_click(cx.listener(move |this, event: &ClickEvent, _, cx| {
+                        this.toggle_selection_group(group_id, &keys, event.modifiers().control, cx);
                     }))
                     .into_any_element()
             }))
@@ -220,7 +338,8 @@ impl KeyboardEditorView {
                     .danger()
                     .outline()
                     .compact()
-                    .label("Clear selected keys")
+                    .label("Clear selection")
+                    .tooltip("Clear selection without removing sound assignments")
                     .disabled(self.selected_keys[self.keyboard_layout.index()].is_empty())
                     .on_click(cx.listener(|this, _, _, cx| {
                         this.clear_selected_keys(cx);
