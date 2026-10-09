@@ -136,7 +136,7 @@ Run packaging on Windows with the x64 MSVC Rust toolchain, the C++ build tools a
 | `packaging/windows/KeyJolt.iss` | Define installation, shortcuts, the destination picker, and conditional startup cleanup during uninstall. |
 | `assets/icons/key-jolt.ico` | Supply the multi-size Windows executable and installer icon. |
 
-Version, publisher, and executable description come from `package.version`, the first `package.authors` entry, and `package.description` in `Cargo.toml`. The installer requires a stable three-part version such as `0.1.0`. The builder embeds native resources through `cargo rustc`; a regular `cargo build --release` does not run this resource step.
+Version, publisher, and executable description come from `package.version`, the first `package.authors` entry, and `package.description` in `Cargo.toml`. The installer requires a stable three-part version such as `0.1.1`. The builder embeds native resources through `cargo rustc`; a regular `cargo build --release` does not run this resource step.
 
 From the repository root, run:
 
@@ -158,10 +158,10 @@ If automatic compiler detection fails, supply the actual paths on your machine:
   -RcPath 'C:\path\to\rc.exe'
 ```
 
-For version `0.1.0`, the completed build writes these files to `dist/windows/0.1.0/`:
+For version `0.1.1`, the completed build writes these files to `dist/windows/0.1.1/`:
 
-- `KeyJolt-0.1.0-windows-x64-Setup.exe`
-- `KeyJolt-0.1.0-windows-x64-Portable.zip`
+- `KeyJolt-0.1.1-windows-x64-Setup.exe`
+- `KeyJolt-0.1.1-windows-x64-Portable.zip`
 - `SHA256SUMS.txt`
 
 The installer and portable ZIP contain the same compiled executable, plus the license and README. **Installer created** means only that the installer step finished; wait for **Release packaging completed.** to confirm that ZIP creation and checksums also succeeded.
