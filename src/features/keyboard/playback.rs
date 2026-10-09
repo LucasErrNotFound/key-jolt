@@ -1,4 +1,5 @@
 use super::KeyboardEditorView;
+use super::assignment::maximum_assigned_sound_count;
 use crate::features::preset_editor::PlaybackMode;
 use gpui_kit::component::button::{Button, ButtonVariants};
 
@@ -19,15 +20,19 @@ impl KeyboardEditorView {
     }
 
     pub(super) fn random_playback_available(&self) -> bool {
-        self.selected_audio_file_count() >= 2
+        self.largest_sound_pool_size() >= 2
     }
 
-    pub(super) fn selected_audio_file_count(&self) -> usize {
-        self.files.iter().filter(|file| file.selected).count()
+    pub(super) fn largest_sound_pool_size(&self) -> usize {
+        maximum_assigned_sound_count(
+            self.files
+                .iter()
+                .map(|file| file.assigned_keys[self.keyboard_layout.index()].as_slice()),
+        )
     }
 
-    pub(super) fn update_playback_mode_for_selection_change(&mut self, previous_count: usize) {
-        let current_count = self.selected_audio_file_count();
+    pub(super) fn update_playback_mode_for_assignment_change(&mut self, previous_count: usize) {
+        let current_count = self.largest_sound_pool_size();
         if current_count == previous_count {
             return;
         }

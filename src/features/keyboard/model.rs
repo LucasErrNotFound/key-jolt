@@ -15,7 +15,7 @@ pub(super) struct AudioFile {
     pub(super) path: PathBuf,
     pub(super) name: SharedString,
     pub(super) size: Option<SharedString>,
-    pub(super) selected: bool,
+    pub(super) assigned_keys: [Vec<String>; 3],
     pub(super) state: UploadState,
     pub(super) preview_state: PreviewState,
 }
@@ -27,7 +27,7 @@ impl AudioFile {
             path,
             name: name.into(),
             size: None,
-            selected: false,
+            assigned_keys: std::array::from_fn(|_| Vec::new()),
             state: UploadState::Uploading,
             preview_state: PreviewState::Stopped,
         }

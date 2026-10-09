@@ -17,6 +17,12 @@ pub(super) fn validate_preset(preset: &PresetFile, kind: PresetKind) -> Result<(
     if preset.bindings.is_empty() {
         return Err(format!("Preset '{}' has no bindings.", preset.name));
     }
+    if let Some(state) = &preset.keyboard
+        && let Some(layouts) = &state.layout_bindings
+        && (state.layout_index > 2 || layouts[state.layout_index] != preset.bindings)
+    {
+        return Err("The active keyboard layout does not match its playback bindings.".to_string());
+    }
     preset_filename(&preset.name)?;
     Ok(())
 }

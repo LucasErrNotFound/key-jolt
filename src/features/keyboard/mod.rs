@@ -1,3 +1,4 @@
+mod assignment;
 mod attachments;
 mod canvas;
 mod commands;

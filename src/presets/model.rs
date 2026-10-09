@@ -24,7 +24,7 @@ pub(crate) struct KeyboardSoundData {
     pub path: PathBuf,
     pub name: SharedString,
     pub size: Option<SharedString>,
-    pub selected: bool,
+    pub assigned_keys: [Vec<String>; 3],
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -82,6 +82,8 @@ pub(crate) struct KeyboardPresetState {
     pub layout_index: usize,
     pub sync_selections: bool,
     pub selected_keys: [Vec<String>; 3],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub layout_bindings: Option<[BTreeMap<String, Binding>; 3]>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

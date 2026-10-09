@@ -1,5 +1,6 @@
 use super::{KeyboardEditorEvent, KeyboardEditorView};
 
+use super::assignment::set_layout_sound_assignment;
 use super::model::AudioFile;
 use crate::features::preset_editor::{PreviewState, UploadState};
 
@@ -167,7 +168,7 @@ impl KeyboardEditorView {
             return;
         };
 
-        let previous_count = self.selected_audio_file_count();
+        let previous_count = self.largest_sound_pool_size();
         if self.files[index].preview_state == PreviewState::Playing {
             cx.emit(KeyboardEditorEvent::StopPreviewRequested { file_id: Some(id) });
         }
@@ -179,23 +180,35 @@ impl KeyboardEditorView {
             self.hovered_file = None;
         }
 
-        self.update_playback_mode_for_selection_change(previous_count);
+        self.update_playback_mode_for_assignment_change(previous_count);
 
         cx.notify();
     }
 
-    pub(super) fn toggle_file_selection(
+    pub(super) fn set_file_assignment(
         &mut self,
         id: u64,
         state: CheckboxState,
         cx: &mut Context<Self>,
     ) {
-        let previous_count = self.selected_audio_file_count();
+        let previous_count = self.largest_sound_pool_size();
+        if self.selected_keys[self.keyboard_layout.index()].is_empty() {
+            return;
+        }
         if let Some(file) = self.files.iter_mut().find(|file| file.id == id) {
-            file.selected = state == CheckboxState::Checked;
+            if !matches!(file.state, UploadState::Success | UploadState::Complete) {
+                return;
+            }
+            set_layout_sound_assignment(
+                &mut file.assigned_keys,
+                &self.selected_keys,
+                self.keyboard_layout,
+                self.sync_selections,
+                state == CheckboxState::Checked,
+            );
         }
 
-        self.update_playback_mode_for_selection_change(previous_count);
+        self.update_playback_mode_for_assignment_change(previous_count);
 
         cx.notify();
     }

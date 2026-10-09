@@ -1,10 +1,11 @@
 use super::{KeyboardEditorEvent, KeyboardEditorView};
 
+use super::assignment::{SelectionAssignment, assignment_state};
 use super::model::AudioFile;
 use crate::features::preset_editor::{PreviewState, UploadState};
 
 use gpui_kit::assets::IconName;
-use gpui_kit::base::{Checkbox, CheckboxIndicator};
+use gpui_kit::base::{Checkbox, CheckboxIndicator, CheckboxState};
 
 use gpui_kit::component::attachment::{
     Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia,
@@ -29,7 +30,17 @@ impl KeyboardEditorView {
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
         let id = file.id;
-        let checked = file.selected;
+        let selection = &self.selected_keys[self.keyboard_layout.index()];
+        let state =
+            match assignment_state(&file.assigned_keys[self.keyboard_layout.index()], selection) {
+                SelectionAssignment::None => CheckboxState::Unchecked,
+                SelectionAssignment::All => CheckboxState::Checked,
+                SelectionAssignment::Mixed => CheckboxState::Indeterminate,
+            };
+        let checked = state == CheckboxState::Checked;
+        let mixed = state == CheckboxState::Indeterminate;
+        let disabled = selection.is_empty()
+            || !matches!(file.state, UploadState::Success | UploadState::Complete);
         let hovered = self.hovered_file == Some(id);
         let entity = cx.entity().downgrade();
 
@@ -159,16 +170,18 @@ impl KeyboardEditorView {
             );
 
         let checkbox = Checkbox::new(format!("select-file-{id}"))
-            .checked(checked)
-            .accessibility_label(format!("Select {}", file.name))
+            .state(state)
+            .disabled(disabled)
+            .accessibility_label(format!("Assign {} to selected keys", file.name))
             .on_change(move |state, _window, _cx, cx| {
                 _ = checkbox_entity.update(cx, |view, cx| {
-                    view.toggle_file_selection(id, state, cx);
+                    view.set_file_assignment(id, state, cx);
                 });
             })
             .child(
                 CheckboxIndicator::new()
-                    .checked(checked)
+                    .state(state)
+                    .disabled(disabled)
                     .flex()
                     .items_center()
                     .justify_center()
@@ -183,6 +196,12 @@ impl KeyboardEditorView {
                                     .with_size(cx.theme().font_size * 0.75)
                                     .text_color(cx.theme().primary_foreground),
                             )
+                    })
+                    .when(mixed, |this| {
+                        this.bg(cx.theme().primary)
+                            .border_color(cx.theme().primary)
+                            .text_color(cx.theme().primary_foreground)
+                            .child("−")
                     }),
             );
 

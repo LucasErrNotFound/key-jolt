@@ -16,8 +16,17 @@ pub(super) fn loaded_preset(
     directory: &Path,
     warnings: &mut Vec<PresetWarning>,
 ) -> LoadedPreset {
+    let layout_bindings = restore_layout_bindings(&preset);
+    let bindings = if kind == PresetKind::Keyboard {
+        layout_bindings
+            .iter()
+            .flat_map(|layout| layout.iter())
+            .collect::<Vec<_>>()
+    } else {
+        preset.bindings.iter().collect::<Vec<_>>()
+    };
     let mut available = BTreeMap::<String, PathBuf>::new();
-    for (identifier, binding) in &preset.bindings {
+    for (identifier, binding) in &bindings {
         for sound in &binding.sounds {
             if !sound.enabled {
                 continue;
@@ -45,7 +54,7 @@ pub(super) fn loaded_preset(
     let keyboard = (kind == PresetKind::Keyboard).then(|| {
         let (selected_keys, layout_index, sync_selections) = restore_keyboard_selection(&preset);
         let mut selected_sound_names = BTreeMap::<String, String>::new();
-        for binding in preset.bindings.values() {
+        for (_, binding) in &bindings {
             for sound in &binding.sounds {
                 if sound.enabled && available.contains_key(&sound.file) {
                     selected_sound_names.insert(sound.file.clone(), sound.name.clone());
@@ -60,16 +69,29 @@ pub(super) fn loaded_preset(
                     size: file_size(&path),
                     path,
                     name: name.into(),
-                    selected: true,
+                    assigned_keys: std::array::from_fn(|index| {
+                        layout_bindings[index]
+                            .iter()
+                            .filter(|(_, binding)| {
+                                binding
+                                    .sounds
+                                    .iter()
+                                    .any(|sound| sound.enabled && sound.file == file)
+                            })
+                            .map(|(key, _)| canonical_key_identifier(key).to_string())
+                            .collect::<BTreeSet<_>>()
+                            .into_iter()
+                            .collect()
+                    }),
                 })
             })
             .collect();
         KeyboardPresetData {
             selected_keys,
             files,
-            random_playback: preset
-                .bindings
-                .values()
+            random_playback: layout_bindings
+                .iter()
+                .flat_map(|layout| layout.values())
                 .any(|binding| binding.playback_mode == PlaybackMode::Random),
             layout_index,
             sync_selections,
@@ -118,6 +140,31 @@ pub(super) fn loaded_preset(
         keyboard,
         mouse,
     }
+}
+
+fn restore_layout_bindings(preset: &PresetFile) -> [BTreeMap<String, Binding>; 3] {
+    if let Some(layouts) = preset
+        .keyboard
+        .as_ref()
+        .and_then(|state| state.layout_bindings.as_ref())
+    {
+        return layouts.clone();
+    }
+    let (_, active, sync) = restore_keyboard_selection(preset);
+    std::array::from_fn(|index| {
+        if index == active {
+            preset.bindings.clone()
+        } else if sync {
+            preset
+                .bindings
+                .iter()
+                .filter(|(key, _)| key_identifier_for_layout(key, index).is_some())
+                .map(|(key, binding)| (key.clone(), binding.clone()))
+                .collect()
+        } else {
+            BTreeMap::new()
+        }
+    })
 }
 
 pub(super) fn file_size(path: &Path) -> Option<gpui_kit::SharedString> {
@@ -220,6 +267,25 @@ pub(super) fn key_identifier_for_layout(
     identifier: &str,
     layout_index: usize,
 ) -> Option<&'static str> {
+    if (layout_index != 0 && identifier.starts_with("num_"))
+        || (layout_index == 2
+            && matches!(
+                identifier,
+                "quote"
+                    | "insert"
+                    | "home"
+                    | "page_up"
+                    | "delete"
+                    | "end"
+                    | "page_down"
+                    | "arrow_up"
+                    | "arrow_down"
+                    | "arrow_left"
+                    | "arrow_right"
+            ))
+    {
+        return None;
+    }
     let identifier = match (layout_index, identifier) {
         (2, "left_shift") => "shift_left",
         (2, "right_shift") => "shift_right",

@@ -72,15 +72,11 @@ pub(crate) fn save_keyboard_preset(
     summary: &str,
     data: &KeyboardPresetData,
 ) -> Result<PresetFile, String> {
-    save_preset_package(
-        root,
-        PresetKind::Keyboard,
-        id,
-        name,
-        summary,
-        Some(keyboard_preset_state(data)),
-        |directory| keyboard_bindings(data, directory),
-    )
+    save_preset_package(root, PresetKind::Keyboard, id, name, summary, |directory| {
+        let layout_bindings = keyboard_bindings(data, directory)?;
+        let bindings = layout_bindings[data.layout_index.min(2)].clone();
+        Ok((Some(keyboard_preset_state(data, layout_bindings)), bindings))
+    })
 }
 
 pub(crate) fn save_mouse_preset(
@@ -90,15 +86,9 @@ pub(crate) fn save_mouse_preset(
     summary: &str,
     data: &MousePresetData,
 ) -> Result<PresetFile, String> {
-    save_preset_package(
-        root,
-        PresetKind::Mouse,
-        id,
-        name,
-        summary,
-        None,
-        |directory| mouse_bindings(data, directory),
-    )
+    save_preset_package(root, PresetKind::Mouse, id, name, summary, |directory| {
+        Ok((None, mouse_bindings(data, directory)?))
+    })
 }
 
 pub(crate) fn load_preset(root: &Path, kind: PresetKind, id: &str) -> Result<LoadedPreset, String> {
@@ -183,11 +173,10 @@ pub(super) fn save_preset_package<F>(
     id: &str,
     name: &str,
     summary: &str,
-    keyboard: Option<KeyboardPresetState>,
     build_bindings: F,
 ) -> Result<PresetFile, String>
 where
-    F: FnOnce(&Path) -> Result<BTreeMap<String, Binding>, String>,
+    F: FnOnce(&Path) -> Result<(Option<KeyboardPresetState>, BTreeMap<String, Binding>), String>,
 {
     if root.as_os_str().is_empty() {
         return Err("The app data directory is unavailable.".to_string());
@@ -212,8 +201,9 @@ where
     let archive_temporary = kind_directory.join(format!(".{}.zip.tmp", Uuid::new_v4()));
     let result = (|| {
         fs::create_dir_all(stage.join("sounds")).map_err(|error| error.to_string())?;
-        let bindings = build_bindings(&stage)?;
+        let (keyboard, bindings) = build_bindings(&stage)?;
         let preset = save_preset_file(&stage, kind, id, name, summary, keyboard, bindings)?;
+        validate_preset(&preset, kind)?;
         write_package(&stage, &archive_temporary)?;
         replace_file(&archive_temporary, &target)?;
 
