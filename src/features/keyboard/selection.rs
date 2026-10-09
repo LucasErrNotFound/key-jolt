@@ -1,8 +1,10 @@
 use super::KeyboardEditorView;
+use super::assignment::{maximum_assigned_sound_count, synchronize_sound_assignments};
 use super::layout::{
     FULL_NUMPAD_ROW_1, FULL_NUMPAD_ROW_2, FULL_NUMPAD_ROW_3, FULL_NUMPAD_ROW_4, FULL_NUMPAD_ROW_5,
     KeyboardLayout, TKL_FUNCTION_ROW,
 };
+use crate::features::preset_editor::PlaybackMode;
 
 use super::model::SelectionGroup;
 use crate::presets::canonical_key_identifier as canonical_key_id;
@@ -121,9 +123,19 @@ impl KeyboardEditorView {
         &mut self,
         group_id: &'static str,
         keys: &[&'static str],
+        additive: bool,
         cx: &mut Context<Self>,
     ) {
         let group_is_selected = self.are_keys_selected(keys);
+        if !additive {
+            if self.sync_selections {
+                for selected in &mut self.selected_keys {
+                    selected.clear();
+                }
+            } else {
+                self.selected_keys[self.keyboard_layout.index()].clear();
+            }
+        }
 
         if self.sync_selections {
             let canonical_keys = keys
@@ -182,6 +194,9 @@ impl KeyboardEditorView {
 
     pub(super) fn set_sync_selections(&mut self, enabled: bool, cx: &mut Context<Self>) {
         if enabled && !self.sync_selections {
+            for file in &mut self.files {
+                synchronize_sound_assignments(&mut file.assigned_keys, self.keyboard_layout);
+            }
             let current_keys = self.selected_keys[self.keyboard_layout.index()].clone();
             let canonical_keys = current_keys
                 .iter()
@@ -208,12 +223,18 @@ impl KeyboardEditorView {
         cx.notify();
     }
 
-    pub(super) fn toggle_key(&mut self, key_id: &'static str, cx: &mut Context<Self>) {
-        toggle_key_selection(
+    pub(super) fn select_key(
+        &mut self,
+        key_id: &'static str,
+        additive: bool,
+        cx: &mut Context<Self>,
+    ) {
+        select_key_selection(
             &mut self.selected_keys,
             self.keyboard_layout,
             key_id,
             self.sync_selections,
+            additive,
         );
 
         cx.notify();
@@ -229,6 +250,16 @@ impl KeyboardEditorView {
         }
 
         self.keyboard_layout = next_layout;
+        let count = maximum_assigned_sound_count(
+            self.files
+                .iter()
+                .map(|file| file.assigned_keys[next_layout.index()].as_slice()),
+        );
+        self.playback_mode = if count < 2 {
+            PlaybackMode::Sequential
+        } else {
+            self.preferred_playback_mode
+        };
         true
     }
 
@@ -243,6 +274,25 @@ impl KeyboardEditorView {
 
         cx.notify();
     }
+}
+
+pub(super) fn select_key_selection(
+    selected_keys: &mut [Vec<&'static str>; 3],
+    keyboard_layout: KeyboardLayout,
+    key_id: &'static str,
+    sync_selections: bool,
+    additive: bool,
+) {
+    if !additive {
+        if sync_selections {
+            for keys in selected_keys.iter_mut() {
+                keys.clear();
+            }
+        } else {
+            selected_keys[keyboard_layout.index()].clear();
+        }
+    }
+    toggle_key_selection(selected_keys, keyboard_layout, key_id, sync_selections);
 }
 
 pub(super) fn toggle_key_selection(
