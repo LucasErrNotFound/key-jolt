@@ -1,5 +1,6 @@
 use super::{KeyboardEditorEvent, KeyboardEditorView};
 
+use super::assignment::maximum_assigned_sound_count;
 use super::layout::KeyboardLayout;
 use super::model::AudioFile;
 use crate::features::preset_editor::{PlaybackMode, PreviewState, SaveStatus, UploadState};
@@ -57,22 +58,20 @@ impl KeyboardEditorView {
                     cx.notify();
                 }
             });
-        let mut initial_data = preset_data.unwrap_or(KeyboardPresetData {
+        let initial_data = preset_data.unwrap_or(KeyboardPresetData {
             selected_keys: [vec![], vec![], vec![]],
             files: Vec::new(),
             random_playback: false,
             layout_index: KeyboardLayout::Compact.index(),
             sync_selections: false,
         });
-        let selected_audio_file_count = initial_data
-            .files
-            .iter()
-            .filter(|file| file.selected)
-            .count();
-        if selected_audio_file_count < 2 {
-            initial_data.random_playback = false;
-        }
-        let selected_keys = initial_data.selected_keys.clone();
+        let largest_sound_pool_size = maximum_assigned_sound_count(
+            initial_data
+                .files
+                .iter()
+                .map(|file| file.assigned_keys[initial_data.layout_index.min(2)].as_slice()),
+        );
+        let selected_keys = std::array::from_fn(|_| Vec::new());
         let files = initial_data
             .files
             .iter()
@@ -82,15 +81,20 @@ impl KeyboardEditorView {
                 path: file.path.clone(),
                 name: file.name.clone(),
                 size: file.size.clone(),
-                selected: file.selected,
+                assigned_keys: file.assigned_keys.clone(),
                 state: UploadState::Complete,
                 preview_state: PreviewState::Stopped,
             })
             .collect::<Vec<_>>();
-        let playback_mode = if initial_data.random_playback {
+        let preferred_playback_mode = if initial_data.random_playback {
             PlaybackMode::Random
         } else {
             PlaybackMode::Sequential
+        };
+        let playback_mode = if largest_sound_pool_size < 2 {
+            PlaybackMode::Sequential
+        } else {
+            preferred_playback_mode
         };
         let next_file_id = files.len() as u64;
         let keyboard_layout = match initial_data.layout_index {
@@ -113,7 +117,7 @@ impl KeyboardEditorView {
             upload_tasks: HashMap::new(),
             hovered_file: None,
             playback_mode,
-            preferred_playback_mode: playback_mode,
+            preferred_playback_mode,
             keyboard_layout,
             save_status: SaveStatus::Idle,
         }
