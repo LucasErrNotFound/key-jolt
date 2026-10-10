@@ -38,6 +38,41 @@ pub(super) fn assignment_groups<'a>(
     groups
 }
 
+pub(super) fn clear_inactive_assignment_mirrors<'a>(
+    assignments: impl IntoIterator<Item = (u64, &'a mut [Vec<String>; 3])>,
+    active_layout: KeyboardLayout,
+) {
+    let mut assignments = assignments.into_iter().collect::<Vec<_>>();
+    let active = assignment_groups(
+        assignments
+            .iter()
+            .map(|(id, keys)| (*id, keys[active_layout.index()].as_slice())),
+    );
+    for layout in KeyboardLayout::ALL {
+        if layout == active_layout {
+            continue;
+        }
+        let inactive = assignment_groups(
+            assignments
+                .iter()
+                .map(|(id, keys)| (*id, keys[layout.index()].as_slice())),
+        );
+        let mirrors = inactive
+            .keys
+            .iter()
+            .filter(|(key, group)| {
+                active.keys.get(*key).is_some_and(|active_group| {
+                    active.sounds[*active_group] == inactive.sounds[**group]
+                })
+            })
+            .map(|(key, _)| key.clone())
+            .collect::<BTreeSet<_>>();
+        for (_, keys) in &mut assignments {
+            keys[layout.index()].retain(|key| !mirrors.contains(canonical_key_identifier(key)));
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum SelectionAssignment {
     None,

@@ -1,5 +1,5 @@
 use super::KeyboardEditorView;
-use super::assignment::{maximum_assigned_sound_count, synchronize_sound_assignments};
+use super::assignment::{clear_inactive_assignment_mirrors, maximum_assigned_sound_count};
 use super::layout::{
     FULL_NUMPAD_ROW_1, FULL_NUMPAD_ROW_2, FULL_NUMPAD_ROW_3, FULL_NUMPAD_ROW_4, FULL_NUMPAD_ROW_5,
     KeyboardLayout, TKL_FUNCTION_ROW,
@@ -193,33 +193,37 @@ impl KeyboardEditorView {
     }
 
     pub(super) fn set_sync_selections(&mut self, enabled: bool, cx: &mut Context<Self>) {
-        if enabled && !self.sync_selections {
-            for file in &mut self.files {
-                synchronize_sound_assignments(&mut file.assigned_keys, self.keyboard_layout);
-            }
-            let current_keys = self.selected_keys[self.keyboard_layout.index()].clone();
-            let canonical_keys = current_keys
-                .iter()
-                .map(|key| canonical_key_id(key))
-                .collect::<Vec<_>>();
-
-            for layout in KeyboardLayout::ALL {
-                let layout_keys = layout.key_ids();
-                self.selected_keys[layout.index()] = layout_keys
-                    .into_iter()
-                    .filter(|key| canonical_keys.contains(&canonical_key_id(key)))
-                    .collect();
-            }
-        } else if !enabled && self.sync_selections {
-            let active_layout = self.keyboard_layout.index();
-            for layout in KeyboardLayout::ALL {
-                if layout.index() != active_layout {
-                    self.selected_keys[layout.index()].clear();
-                }
-            }
+        if enabled == self.sync_selections {
+            return;
         }
 
+        for file in &mut self.files {
+            if enabled {
+                file.begin_assignment_sync(self.keyboard_layout);
+            } else {
+                file.end_assignment_sync(self.keyboard_layout);
+            }
+        }
+        if !enabled {
+            clear_inactive_assignment_mirrors(
+                self.files
+                    .iter_mut()
+                    .map(|file| (file.id, &mut file.assigned_keys)),
+                self.keyboard_layout,
+            );
+        }
+        set_selection_sync(&mut self.selected_keys, self.keyboard_layout, enabled);
         self.sync_selections = enabled;
+        let count = maximum_assigned_sound_count(
+            self.files
+                .iter()
+                .map(|file| file.assigned_keys[self.keyboard_layout.index()].as_slice()),
+        );
+        self.playback_mode = if count < 2 {
+            PlaybackMode::Sequential
+        } else {
+            self.preferred_playback_mode
+        };
         cx.notify();
     }
 
@@ -273,6 +277,32 @@ impl KeyboardEditorView {
         self.apply_layout_change(next_layout);
 
         cx.notify();
+    }
+}
+
+pub(super) fn set_selection_sync(
+    selected_keys: &mut [Vec<&'static str>; 3],
+    keyboard_layout: KeyboardLayout,
+    enabled: bool,
+) {
+    if enabled {
+        let canonical_keys = selected_keys[keyboard_layout.index()]
+            .iter()
+            .map(|key| canonical_key_id(key))
+            .collect::<Vec<_>>();
+        for layout in KeyboardLayout::ALL {
+            selected_keys[layout.index()] = layout
+                .key_ids()
+                .into_iter()
+                .filter(|key| canonical_keys.contains(&canonical_key_id(key)))
+                .collect();
+        }
+    } else {
+        for layout in KeyboardLayout::ALL {
+            if layout != keyboard_layout {
+                selected_keys[layout.index()].clear();
+            }
+        }
     }
 }
 
