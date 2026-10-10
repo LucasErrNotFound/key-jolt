@@ -9,6 +9,11 @@ use super::sounds::copy_sound;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+pub(super) struct KeyboardBindingMaps {
+    pub(super) layouts: [BTreeMap<String, Binding>; 3],
+    pub(super) independent_layouts: Option<[BTreeMap<String, Binding>; 3]>,
+}
+
 pub(crate) fn runtime_bindings(
     root: &Path,
     kind: PresetKind,
@@ -45,30 +50,55 @@ pub(crate) fn runtime_bindings(
 
 pub(super) fn keyboard_preset_state(
     data: &KeyboardPresetData,
-    layout_bindings: [BTreeMap<String, Binding>; 3],
+    mut mappings: KeyboardBindingMaps,
 ) -> KeyboardPresetState {
+    let active = data.layout_index.min(2);
+    if let Some(independent) = &mut mappings.independent_layouts {
+        for (index, bindings) in independent.iter_mut().enumerate() {
+            if index == active {
+                *bindings = mappings.layouts[active].clone();
+            } else {
+                bindings.retain(|key, binding| mappings.layouts[active].get(key) != Some(binding));
+            }
+        }
+    }
     KeyboardPresetState {
-        layout_index: data.layout_index.min(2),
+        layout_index: active,
         sync_selections: data.sync_selections,
         selected_keys: data
             .selected_keys
             .clone()
             .map(|keys| keys.into_iter().map(str::to_string).collect::<Vec<_>>()),
-        layout_bindings: Some(layout_bindings),
+        layout_bindings: Some(mappings.layouts),
+        independent_layout_bindings: mappings.independent_layouts,
     }
 }
 
 pub(super) fn keyboard_bindings(
     data: &KeyboardPresetData,
     directory: &Path,
-) -> Result<[BTreeMap<String, Binding>; 3], String> {
+) -> Result<KeyboardBindingMaps, String> {
     let mut layouts: [BTreeMap<String, Binding>; 3] = std::array::from_fn(|_| BTreeMap::new());
+    let mut independent_layouts = (data.sync_selections
+        && data
+            .files
+            .iter()
+            .any(|sound| sound.independent_assigned_keys.is_some()))
+    .then(|| std::array::from_fn(|_| BTreeMap::<String, Binding>::new()));
     for sound in &data.files {
-        if sound.assigned_keys.iter().all(Vec::is_empty) {
+        let independent = sound
+            .independent_assigned_keys
+            .as_ref()
+            .unwrap_or(&sound.assigned_keys);
+        if sound.assigned_keys.iter().all(Vec::is_empty) && independent.iter().all(Vec::is_empty) {
             continue;
         }
         let reference = copy_sound(&sound.path, &sound.name, directory)?;
-        for (bindings, keys) in layouts.iter_mut().zip(&sound.assigned_keys) {
+        for (bindings, keys) in layouts.iter_mut().zip(&sound.assigned_keys).chain(
+            independent_layouts
+                .iter_mut()
+                .flat_map(|layouts| layouts.iter_mut().zip(independent)),
+        ) {
             for key in keys {
                 let binding = bindings
                     .entry(runtime_key_identifier(key).to_string())
@@ -86,7 +116,10 @@ pub(super) fn keyboard_bindings(
             }
         }
     }
-    Ok(layouts)
+    Ok(KeyboardBindingMaps {
+        layouts,
+        independent_layouts,
+    })
 }
 
 pub(super) fn mouse_bindings(

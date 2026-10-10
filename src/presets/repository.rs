@@ -73,9 +73,9 @@ pub(crate) fn save_keyboard_preset(
     data: &KeyboardPresetData,
 ) -> Result<PresetFile, String> {
     save_preset_package(root, PresetKind::Keyboard, id, name, summary, |directory| {
-        let layout_bindings = keyboard_bindings(data, directory)?;
-        let bindings = layout_bindings[data.layout_index.min(2)].clone();
-        Ok((Some(keyboard_preset_state(data, layout_bindings)), bindings))
+        let mappings = keyboard_bindings(data, directory)?;
+        let bindings = mappings.layouts[data.layout_index.min(2)].clone();
+        Ok((Some(keyboard_preset_state(data, mappings)), bindings))
     })
 }
 

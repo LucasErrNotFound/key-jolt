@@ -17,10 +17,17 @@ pub(super) fn loaded_preset(
     warnings: &mut Vec<PresetWarning>,
 ) -> LoadedPreset {
     let layout_bindings = restore_layout_bindings(&preset);
+    let independent_layout_bindings =
+        restore_independent_layout_bindings(&preset, &layout_bindings);
     let bindings = if kind == PresetKind::Keyboard {
         layout_bindings
             .iter()
             .flat_map(|layout| layout.iter())
+            .chain(
+                independent_layout_bindings
+                    .iter()
+                    .flat_map(|layouts| layouts.iter().flat_map(|layout| layout.iter())),
+            )
             .collect::<Vec<_>>()
     } else {
         preset.bindings.iter().collect::<Vec<_>>()
@@ -69,20 +76,10 @@ pub(super) fn loaded_preset(
                     size: file_size(&path),
                     path,
                     name: name.into(),
-                    assigned_keys: std::array::from_fn(|index| {
-                        layout_bindings[index]
-                            .iter()
-                            .filter(|(_, binding)| {
-                                binding
-                                    .sounds
-                                    .iter()
-                                    .any(|sound| sound.enabled && sound.file == file)
-                            })
-                            .map(|(key, _)| canonical_key_identifier(key).to_string())
-                            .collect::<BTreeSet<_>>()
-                            .into_iter()
-                            .collect()
-                    }),
+                    assigned_keys: sound_assigned_keys(&layout_bindings, &file),
+                    independent_assigned_keys: independent_layout_bindings
+                        .as_ref()
+                        .map(|layouts| sound_assigned_keys(layouts, &file)),
                 })
             })
             .collect();
@@ -140,6 +137,44 @@ pub(super) fn loaded_preset(
         keyboard,
         mouse,
     }
+}
+
+fn sound_assigned_keys(layouts: &[BTreeMap<String, Binding>; 3], file: &str) -> [Vec<String>; 3] {
+    std::array::from_fn(|index| {
+        layouts[index]
+            .iter()
+            .filter(|(_, binding)| {
+                binding
+                    .sounds
+                    .iter()
+                    .any(|sound| sound.enabled && sound.file == file)
+            })
+            .map(|(key, _)| canonical_key_identifier(key).to_string())
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect()
+    })
+}
+
+fn restore_independent_layout_bindings(
+    preset: &PresetFile,
+    layouts: &[BTreeMap<String, Binding>; 3],
+) -> Option<[BTreeMap<String, Binding>; 3]> {
+    let state = preset.keyboard.as_ref()?;
+    if !state.sync_selections {
+        return None;
+    }
+    if let Some(independent) = &state.independent_layout_bindings {
+        return Some(independent.clone());
+    }
+    let active = state.layout_index.min(2);
+    Some(std::array::from_fn(|index| {
+        layouts[index]
+            .iter()
+            .filter(|(key, binding)| index == active || layouts[active].get(*key) != Some(*binding))
+            .map(|(key, binding)| (key.clone(), binding.clone()))
+            .collect()
+    }))
 }
 
 fn restore_layout_bindings(preset: &PresetFile) -> [BTreeMap<String, Binding>; 3] {

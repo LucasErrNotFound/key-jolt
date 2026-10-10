@@ -10,8 +10,22 @@ use std::collections::BTreeSet;
 
 impl KeyboardEditorView {
     pub(super) fn has_unsaved_changes(&self, cx: &App) -> bool {
-        let current_data = self.current_preset_data();
-        let data_unchanged = current_data.files == self.initial_data.files
+        let current_data = self.preset_data(false);
+        let files_unchanged =
+            current_data.files.len() == self.initial_data.files.len()
+                && current_data.files.iter().zip(&self.initial_data.files).all(
+                    |(current, initial)| {
+                        current.path == initial.path
+                            && current.name == initial.name
+                            && current.size == initial.size
+                            && &current.assigned_keys
+                                == initial
+                                    .independent_assigned_keys
+                                    .as_ref()
+                                    .unwrap_or(&initial.assigned_keys)
+                    },
+                );
+        let data_unchanged = files_unchanged
             && current_data.random_playback == self.initial_data.random_playback
             && current_data.layout_index == self.initial_data.layout_index
             && current_data.sync_selections == self.initial_data.sync_selections;
@@ -29,6 +43,10 @@ impl KeyboardEditorView {
     }
 
     pub(super) fn current_preset_data(&self) -> KeyboardPresetData {
+        self.preset_data(true)
+    }
+
+    fn preset_data(&self, include_sync_preview: bool) -> KeyboardPresetData {
         KeyboardPresetData {
             selected_keys: self.selected_keys.clone(),
             files: self
@@ -38,7 +56,16 @@ impl KeyboardEditorView {
                     path: file.path.clone(),
                     name: file.name.clone(),
                     size: file.size.clone(),
-                    assigned_keys: file.assigned_keys.clone(),
+                    assigned_keys: if include_sync_preview {
+                        file.assigned_keys.clone()
+                    } else {
+                        file.edited_assigned_keys().clone()
+                    },
+                    independent_assigned_keys: if include_sync_preview && self.sync_selections {
+                        file.independent_assigned_keys.clone()
+                    } else {
+                        None
+                    },
                 })
                 .collect(),
             random_playback: self.preferred_playback_mode == PlaybackMode::Random,

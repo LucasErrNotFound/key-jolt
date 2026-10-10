@@ -23,6 +23,14 @@ pub(super) fn validate_preset(preset: &PresetFile, kind: PresetKind) -> Result<(
     {
         return Err("The active keyboard layout does not match its playback bindings.".to_string());
     }
+    if let Some(state) = &preset.keyboard
+        && state.independent_layout_bindings.is_some()
+        && (!state.sync_selections || state.layout_bindings.is_none())
+    {
+        return Err(
+            "Independent keyboard mappings require a synchronized layout snapshot.".to_string(),
+        );
+    }
     preset_filename(&preset.name)?;
     Ok(())
 }

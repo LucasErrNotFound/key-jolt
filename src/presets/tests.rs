@@ -96,6 +96,7 @@ fn saving_keyboard_creates_named_zip_and_runtime_cache() {
     let data = KeyboardPresetData {
         selected_keys: [vec![], vec![], vec!["esc"]],
         files: vec![KeyboardSoundData {
+            independent_assigned_keys: None,
             path: source.clone(),
             name: "source.wav".into(),
             size: None,
@@ -191,6 +192,7 @@ fn import_creates_new_id_from_keyboard_package() {
     let data = KeyboardPresetData {
         selected_keys: [vec![], vec![], vec!["esc"]],
         files: vec![KeyboardSoundData {
+            independent_assigned_keys: None,
             path: audio,
             name: "sound.wav".into(),
             size: None,
@@ -243,6 +245,7 @@ fn keyboard_bindings_use_runtime_modifier_identifiers_and_print_screen() {
             vec![],
         ],
         files: vec![KeyboardSoundData {
+            independent_assigned_keys: None,
             path: source,
             name: "sound.wav".into(),
             size: None,
@@ -305,12 +308,14 @@ fn independent_keyboard_sounds_survive_save_reopen_import_and_resave() {
         selected_keys: [Vec::new(), Vec::new(), vec!["space"]],
         files: vec![
             KeyboardSoundData {
+                independent_assigned_keys: None,
                 path: a,
                 name: "letters.wav".into(),
                 size: None,
                 assigned_keys: layout_keys(2, letters),
             },
             KeyboardSoundData {
+                independent_assigned_keys: None,
                 path: b,
                 name: "space.wav".into(),
                 size: None,
@@ -392,6 +397,7 @@ fn clearing_keyboard_selection_does_not_remove_saved_bindings() {
     let data = KeyboardPresetData {
         selected_keys: [Vec::new(), Vec::new(), Vec::new()],
         files: vec![KeyboardSoundData {
+            independent_assigned_keys: None,
             path: source,
             name: "sound.wav".into(),
             size: None,
@@ -427,6 +433,7 @@ fn keyboard_sound_pools_and_modifier_aliases_stay_independent() {
         let path = root.join(name);
         fs::write(&path, name.as_bytes()).unwrap();
         files.push(KeyboardSoundData {
+            independent_assigned_keys: None,
             path,
             name: name.into(),
             size: None,
@@ -434,6 +441,7 @@ fn keyboard_sound_pools_and_modifier_aliases_stay_independent() {
         });
     }
     files.push(KeyboardSoundData {
+        independent_assigned_keys: None,
         path: root.join("unassigned-missing.wav"),
         name: "unassigned-missing.wav".into(),
         size: None,
@@ -538,6 +546,7 @@ fn independent_layout_mappings_survive_reopen_import_and_active_layout_changes()
         let path = root.join(name);
         fs::write(&path, name).unwrap();
         files.push(KeyboardSoundData {
+            independent_assigned_keys: None,
             path,
             name: name.into(),
             size: None,
@@ -668,6 +677,7 @@ fn inactive_layout_sound_references_receive_the_same_path_validation() {
     let data = KeyboardPresetData {
         selected_keys: std::array::from_fn(|_| Vec::new()),
         files: vec![KeyboardSoundData {
+            independent_assigned_keys: None,
             path,
             name: "audio.wav".into(),
             size: None,
@@ -716,6 +726,7 @@ fn saving_an_empty_active_layout_keeps_the_existing_preset_intact() {
     let mut data = KeyboardPresetData {
         selected_keys: std::array::from_fn(|_| Vec::new()),
         files: vec![KeyboardSoundData {
+            independent_assigned_keys: None,
             path,
             name: "audio.wav".into(),
             size: None,
@@ -741,5 +752,193 @@ fn saving_an_empty_active_layout_keeps_the_existing_preset_intact() {
         2
     );
     remove_cache(PresetKind::Keyboard, &id);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn sync_snapshots_survive_save_reopen_import_and_resave_without_duplicate_audio() {
+    let root = std::env::temp_dir().join(format!("key-jolt-sync-snapshot-{}", Uuid::new_v4()));
+    fs::create_dir_all(&root).unwrap();
+    let source = root.join("sound.wav");
+    fs::write(&source, b"audio fixture").unwrap();
+    let independent = [vec!["b".into()], Vec::new(), vec!["a".into()]];
+    let visible = [
+        vec!["a".into(), "b".into()],
+        vec!["a".into()],
+        vec!["a".into()],
+    ];
+    let data = KeyboardPresetData {
+        selected_keys: std::array::from_fn(|_| Vec::new()),
+        files: vec![KeyboardSoundData {
+            path: source,
+            name: "sound.wav".into(),
+            size: None,
+            assigned_keys: visible.clone(),
+            independent_assigned_keys: Some(independent.clone()),
+        }],
+        random_playback: false,
+        layout_index: 2,
+        sync_selections: true,
+    };
+    let id = Uuid::new_v4().to_string();
+    let saved = save_keyboard_preset(&root, &id, "Sync Snapshot", "", &data).unwrap();
+    assert!(
+        saved
+            .keyboard
+            .unwrap()
+            .independent_layout_bindings
+            .is_some()
+    );
+    let archive = preset_package_path(&root, PresetKind::Keyboard, "Sync Snapshot").unwrap();
+    assert_eq!(archive_entries(&archive).len(), 2);
+    let loaded = load_preset(&root, PresetKind::Keyboard, &id)
+        .unwrap()
+        .keyboard
+        .unwrap();
+    assert_eq!(loaded.files[0].assigned_keys, visible);
+    assert_eq!(
+        loaded.files[0].independent_assigned_keys,
+        Some(independent.clone())
+    );
+    let imported_root = root.join("imported");
+    let imported = import_preset(&imported_root, PresetKind::Keyboard, &archive).unwrap();
+    let imported_data = load_preset(&imported_root, PresetKind::Keyboard, &imported.id)
+        .unwrap()
+        .keyboard
+        .unwrap();
+    assert_eq!(
+        imported_data.files[0].independent_assigned_keys,
+        Some(independent.clone())
+    );
+    save_keyboard_preset(
+        &imported_root,
+        &imported.id,
+        "Imported Snapshot",
+        "",
+        &imported_data,
+    )
+    .unwrap();
+    let resaved = load_preset(&imported_root, PresetKind::Keyboard, &imported.id)
+        .unwrap()
+        .keyboard
+        .unwrap();
+    assert_eq!(resaved.files[0].assigned_keys, visible);
+    assert_eq!(
+        resaved.files[0].independent_assigned_keys,
+        Some(independent)
+    );
+    remove_cache(PresetKind::Keyboard, &id);
+    remove_cache(PresetKind::Keyboard, &imported.id);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn older_synced_presets_preserve_different_sound_pools_when_inferring_mirrors() {
+    let root = std::env::temp_dir().join(format!("key-jolt-sync-legacy-{}", Uuid::new_v4()));
+    fs::create_dir_all(&root).unwrap();
+    let mut files = Vec::new();
+    for (name, keys) in [
+        (
+            "a.wav",
+            [vec!["a".into()], vec!["a".into()], vec!["a".into()]],
+        ),
+        ("b.wav", [vec!["a".into()], Vec::new(), Vec::new()]),
+    ] {
+        let path = root.join(name);
+        fs::write(&path, b"audio fixture").unwrap();
+        files.push(KeyboardSoundData {
+            path,
+            name: name.into(),
+            size: None,
+            assigned_keys: keys,
+            independent_assigned_keys: None,
+        });
+    }
+    let data = KeyboardPresetData {
+        selected_keys: std::array::from_fn(|_| Vec::new()),
+        files,
+        random_playback: false,
+        layout_index: 2,
+        sync_selections: true,
+    };
+    let id = Uuid::new_v4().to_string();
+    save_keyboard_preset(&root, &id, "Legacy Sync", "", &data).unwrap();
+    let loaded = load_preset(&root, PresetKind::Keyboard, &id)
+        .unwrap()
+        .keyboard
+        .unwrap();
+    let a = loaded
+        .files
+        .iter()
+        .find(|sound| sound.name.as_ref() == "a.wav")
+        .unwrap();
+    assert_eq!(
+        a.independent_assigned_keys.as_ref().unwrap(),
+        &[vec!["a".to_string()], Vec::new(), vec!["a".to_string()]]
+    );
+    let b = loaded
+        .files
+        .iter()
+        .find(|sound| sound.name.as_ref() == "b.wav")
+        .unwrap();
+    assert_eq!(
+        b.independent_assigned_keys.as_ref().unwrap(),
+        &[vec!["a".to_string()], Vec::new(), Vec::new()]
+    );
+    remove_cache(PresetKind::Keyboard, &id);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn independent_snapshot_sound_paths_receive_the_same_traversal_validation() {
+    let root = std::env::temp_dir().join(format!("key-jolt-snapshot-paths-{}", Uuid::new_v4()));
+    fs::create_dir_all(&root).unwrap();
+    let source = root.join("sound.wav");
+    fs::write(&source, b"audio fixture").unwrap();
+    let data = KeyboardPresetData {
+        selected_keys: std::array::from_fn(|_| Vec::new()),
+        files: vec![KeyboardSoundData {
+            path: source,
+            name: "sound.wav".into(),
+            size: None,
+            assigned_keys: [vec!["a".into()], vec!["a".into()], vec!["a".into()]],
+            independent_assigned_keys: Some([Vec::new(), Vec::new(), vec!["a".into()]]),
+        }],
+        random_playback: false,
+        layout_index: 2,
+        sync_selections: true,
+    };
+    let id = Uuid::new_v4().to_string();
+    let mut saved = save_keyboard_preset(&root, &id, "Snapshot Paths", "", &data).unwrap();
+    let archive = preset_package_path(&root, PresetKind::Keyboard, "Snapshot Paths").unwrap();
+    let extracted = root.join("extracted");
+    super::archive::extract_package(&archive, &extracted).unwrap();
+    fs::write(root.join("outside.wav"), b"outside fixture").unwrap();
+    saved
+        .keyboard
+        .as_mut()
+        .unwrap()
+        .independent_layout_bindings
+        .as_mut()
+        .unwrap()[2]
+        .get_mut("a")
+        .unwrap()
+        .sounds[0]
+        .file = "../outside.wav".into();
+    let mut warnings = Vec::new();
+    let loaded =
+        super::restoration::loaded_preset(saved, PresetKind::Keyboard, &extracted, &mut warnings)
+            .keyboard
+            .unwrap();
+    assert!(!warnings.is_empty());
+    assert_eq!(loaded.files.len(), 1);
+    assert!(
+        loaded.files[0]
+            .independent_assigned_keys
+            .as_ref()
+            .unwrap()
+            .iter()
+            .all(Vec::is_empty)
+    );
     fs::remove_dir_all(root).unwrap();
 }

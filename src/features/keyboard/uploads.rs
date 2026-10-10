@@ -1,6 +1,5 @@
 use super::{KeyboardEditorEvent, KeyboardEditorView};
 
-use super::assignment::set_layout_sound_assignment;
 use super::model::AudioFile;
 use crate::features::preset_editor::{PreviewState, UploadState};
 
@@ -199,8 +198,7 @@ impl KeyboardEditorView {
             if !matches!(file.state, UploadState::Success | UploadState::Complete) {
                 return;
             }
-            set_layout_sound_assignment(
-                &mut file.assigned_keys,
+            file.set_sound_assignment(
                 &self.selected_keys,
                 self.keyboard_layout,
                 self.sync_selections,

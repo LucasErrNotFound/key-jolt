@@ -65,14 +65,8 @@ impl KeyboardEditorView {
             layout_index: KeyboardLayout::Compact.index(),
             sync_selections: false,
         });
-        let largest_sound_pool_size = maximum_assigned_sound_count(
-            initial_data
-                .files
-                .iter()
-                .map(|file| file.assigned_keys[initial_data.layout_index.min(2)].as_slice()),
-        );
         let selected_keys = std::array::from_fn(|_| Vec::new());
-        let files = initial_data
+        let mut files = initial_data
             .files
             .iter()
             .enumerate()
@@ -82,6 +76,7 @@ impl KeyboardEditorView {
                 name: file.name.clone(),
                 size: file.size.clone(),
                 assigned_keys: file.assigned_keys.clone(),
+                independent_assigned_keys: file.independent_assigned_keys.clone(),
                 state: UploadState::Complete,
                 preview_state: PreviewState::Stopped,
             })
@@ -91,11 +86,6 @@ impl KeyboardEditorView {
         } else {
             PlaybackMode::Sequential
         };
-        let playback_mode = if largest_sound_pool_size < 2 {
-            PlaybackMode::Sequential
-        } else {
-            preferred_playback_mode
-        };
         let next_file_id = files.len() as u64;
         let keyboard_layout = match initial_data.layout_index {
             0 => KeyboardLayout::FullSize,
@@ -103,6 +93,21 @@ impl KeyboardEditorView {
             _ => KeyboardLayout::Compact,
         };
         let sync_selections = initial_data.sync_selections;
+        if sync_selections {
+            for file in &mut files {
+                file.begin_assignment_sync(keyboard_layout);
+            }
+        }
+        let largest_sound_pool_size = maximum_assigned_sound_count(
+            files
+                .iter()
+                .map(|file| file.assigned_keys[keyboard_layout.index()].as_slice()),
+        );
+        let playback_mode = if largest_sound_pool_size < 2 {
+            PlaybackMode::Sequential
+        } else {
+            preferred_playback_mode
+        };
 
         Self {
             preset_id,
