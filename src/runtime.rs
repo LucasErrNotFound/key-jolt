@@ -1,4 +1,5 @@
-use crate::input::{InputAction, InputState, Listener, Throttle};
+use crate::activity::{ACTIVITY, ActivityChannel};
+use crate::input::{InputAction, InputEvent, InputState, Listener, Throttle};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
@@ -33,22 +34,37 @@ pub(crate) fn start_runtime_thread(
             let mut listener_running = true;
             while listener_running {
                 match input_events.recv_timeout(Duration::from_millis(25)) {
-                    Ok(event) => match state.handle(event) {
-                        Some(InputAction::Sound(identifier)) if enabled.load(Ordering::Acquire) => {
-                            if !matches!(identifier.as_str(), "left" | "right" | "middle_scroll")
-                                || mouse_throttle.allow(std::time::Instant::now())
-                            {
-                                playback.play(&identifier)
+                    Ok(event) => {
+                        match &event {
+                            InputEvent::KeyPressed(_) => {
+                                ACTIVITY.record_input(ActivityChannel::Keyboard)
                             }
+                            InputEvent::ButtonPressed(_) => {
+                                ACTIVITY.record_input(ActivityChannel::Mouse)
+                            }
+                            InputEvent::KeyReleased(_) => {}
                         }
-                        Some(InputAction::ToggleEnabled) => {
-                            let value = !enabled.load(Ordering::Acquire);
-                            enabled.store(value, Ordering::Release);
-                            playback.set_enabled(value);
-                            let _ = thread_events.send(RuntimeEvent::ToggleApp(value));
+                        match state.handle(event) {
+                            Some(InputAction::Sound(identifier))
+                                if enabled.load(Ordering::Acquire) =>
+                            {
+                                if !matches!(
+                                    identifier.as_str(),
+                                    "left" | "right" | "middle_scroll"
+                                ) || mouse_throttle.allow(std::time::Instant::now())
+                                {
+                                    playback.play(&identifier)
+                                }
+                            }
+                            Some(InputAction::ToggleEnabled) => {
+                                let value = !enabled.load(Ordering::Acquire);
+                                enabled.store(value, Ordering::Release);
+                                playback.set_enabled(value);
+                                let _ = thread_events.send(RuntimeEvent::ToggleApp(value));
+                            }
+                            _ => {}
                         }
-                        _ => {}
-                    },
+                    }
                     Err(mpsc::RecvTimeoutError::Timeout) => {}
                     Err(mpsc::RecvTimeoutError::Disconnected) => listener_running = false,
                 }

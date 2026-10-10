@@ -8,6 +8,7 @@ use std::thread;
 
 use rodio::{Decoder, DeviceSinkBuilder, Player, Source, buffer::SamplesBuffer};
 
+use crate::activity::{ACTIVITY, ActivityChannel};
 use crate::presets::{self, PlaybackMode, PresetKind};
 use crate::settings::store::AppSettings;
 
@@ -149,6 +150,14 @@ impl PlaybackHandle {
                                 let player = Player::connect_new(output.mixer());
                                 player.set_volume(f32::from_bits(volume).clamp(0.0, 2.0));
                                 player.append(binding.sounds[index].clone());
+                                ACTIVITY.record_sound(
+                                    if mouse {
+                                        ActivityChannel::Mouse
+                                    } else {
+                                        ActivityChannel::Keyboard
+                                    },
+                                    f32::from_bits(volume).clamp(0.0, 2.0),
+                                );
                                 active_players.push(player);
                             }
                         }
