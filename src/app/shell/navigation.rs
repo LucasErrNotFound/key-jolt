@@ -19,6 +19,8 @@ impl AppShell {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        self.home
+            .update(cx, |home, cx| home.set_mixer_visible(false, window, cx));
         self.stop_preview(None, cx);
         let editor = KeyboardEditorView::view(preset_id, preset_name, preset_data, window, cx);
 
@@ -30,6 +32,8 @@ impl AppShell {
                     this.stop_preview(None, cx);
                     this.editor_subscription.take();
                     this.page = AppPage::Home;
+                    this.home
+                        .update(cx, |home, cx| home.set_mixer_visible(true, window, cx));
                     cx.notify();
                 }
 
@@ -93,6 +97,8 @@ impl AppShell {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        self.home
+            .update(cx, |home, cx| home.set_mixer_visible(false, window, cx));
         self.stop_preview(None, cx);
         let editor = MouseEditorView::view(preset_id, preset_name, preset_data, window, cx);
         let subscription = cx.subscribe_in(
@@ -103,6 +109,8 @@ impl AppShell {
                     this.stop_preview(None, cx);
                     this.editor_subscription.take();
                     this.page = AppPage::Home;
+                    this.home
+                        .update(cx, |home, cx| home.set_mixer_visible(true, window, cx));
                     cx.notify();
                 }
 

@@ -34,6 +34,7 @@ impl HomeView {
     }
 
     pub(super) fn emit_settings(&mut self, persist: bool, cx: &mut Context<Self>) {
+        self.silence_inactive_meters(cx);
         self.settings.keyboard_volume = self.keyboard_volume;
         self.settings.mouse_volume = self.mouse_volume;
         self.settings.keyboard_muted = self.keyboard_muted;

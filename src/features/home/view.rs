@@ -1,8 +1,8 @@
 use super::{HomeEvent, HomeView};
 
-use super::components::{render_delete_confirmation, render_volume_control};
+use super::components::render_delete_confirmation;
 
-use super::preset_summary::PresetSummary;
+use super::mixer_strip::MixerStrip;
 
 use crate::app_assets::APP_ICON_PATH;
 use crate::presets::PresetKind;
@@ -14,6 +14,7 @@ use gpui_kit::component::kbd::Kbd;
 use gpui_kit::component::label::Label;
 use gpui_kit::component::switch::Switch;
 use gpui_kit::component::*;
+use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
 impl HomeView {
@@ -119,180 +120,177 @@ impl HomeView {
             )
     }
 
-    pub(super) fn render_keyboard_presets(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let active_name = self
-            .active_preset()
+    pub(super) fn render_mixer_strip(
+        &self,
+        kind: PresetKind,
+        cx: &mut Context<Self>,
+    ) -> MixerStrip {
+        let keyboard = kind == PresetKind::Keyboard;
+        let preset = if keyboard {
+            self.active_preset()
+        } else {
+            self.active_mouse_preset()
+        };
+        let id = if keyboard {
+            self.active_id.clone()
+        } else {
+            self.mouse_active_id.clone()
+        };
+        let name = preset
             .map(|preset| preset.name.clone())
-            .unwrap_or_else(|| SharedString::from("No preset selected"));
-
-        let summary = self
-            .active_preset()
-            .map(|preset| preset.summary.clone())
-            .unwrap_or_else(|| SharedString::from("Choose a preset above"));
-
-        let has_active_preset = self.active_preset().is_some();
-        let active_id = self.active_id.clone();
-        let delete_id = active_id.clone();
-
-        v_flex()
-            .gap_2()
-            .child(
-                Label::new("Keyboard Presets")
-                    .text_size(rems(0.9375))
-                    .text_color(cx.theme().muted_foreground)
-                    .font_bold(),
-            )
-            .child(
-                h_flex()
-                    .gap_2()
-                    .child(
-                        Combobox::new(&self.preset_picker)
-                            .placeholder("Select a preset")
-                            .cleanable(false)
-                            .flex_1(),
-                    )
-                    .child(render_delete_confirmation(
-                        cx,
-                        delete_id,
-                        active_name.clone(),
-                        PresetKind::Keyboard,
-                    )),
-            )
-            .child(PresetSummary::new(
-                IconName::Keyboard,
-                active_name,
-                summary,
-                Button::new("edit-preset")
-                    .icon(Icon::new(IconName::Pencil).with_size(cx.theme().font_size * 1.875))
-                    .label("Edit")
-                    .disabled(!has_active_preset)
-                    .on_click(cx.listener(move |_this, _event, _window, cx| {
-                        cx.emit(HomeEvent::EditRequested(active_id.clone()));
-                    })),
-            ))
-            .child(render_volume_control(
-                cx,
+            .unwrap_or_else(|| "No preset selected".into());
+        let summary = preset
+            .map(|preset| {
+                format!(
+                    "{} · {}",
+                    if preset.is_builtin {
+                        "Built-in"
+                    } else {
+                        "Custom"
+                    },
+                    preset.summary
+                )
+                .into()
+            })
+            .unwrap_or_else(|| SharedString::from("Choose or create a preset"));
+        let (slider, focus, volume, muted, activity) = if keyboard {
+            (
                 &self.keyboard_volume_slider,
+                &self.keyboard_fader_focus,
                 self.keyboard_volume,
                 self.keyboard_muted,
-                "keyboard-mute-toggle",
-                cx.listener(|this, _event, window, cx| {
-                    let slider = this.keyboard_volume_slider.clone();
-                    Self::toggle_mute(&mut this.keyboard_muted, &slider, window, cx);
-                    this.emit_settings(true, cx);
-                }),
-            ))
-            .child(
-                h_flex()
-                    .gap_2()
-                    .child(
-                        Button::new("import-preset")
-                            .outline()
-                            .icon(
-                                Icon::new(IconName::Import).with_size(cx.theme().font_size * 1.875),
-                            )
-                            .label("Import preset")
-                            .on_click(cx.listener(|_this, _event, _window, cx| {
-                                cx.emit(HomeEvent::ImportKeyboardRequested);
-                            })),
-                    )
-                    .child(
-                        Button::new("create-preset")
-                            .primary()
-                            .icon(Icon::new(IconName::Plus).with_size(cx.theme().font_size * 1.875))
-                            .label("Create preset")
-                            .on_click(cx.listener(|_this, _event, _window, cx| {
-                                cx.emit(HomeEvent::CreateKeyboardRequested);
-                            })),
-                    ),
+                &self.keyboard_activity,
             )
-    }
-
-    pub(super) fn render_mouse_section(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let active_name = self
-            .active_mouse_preset()
-            .map(|preset| preset.name.clone())
-            .unwrap_or_else(|| SharedString::from("No preset selected"));
-        let summary = self
-            .active_mouse_preset()
-            .map(|preset| preset.summary.clone())
-            .unwrap_or_else(|| SharedString::from("Choose a preset above"));
-        let has_active_preset = self.active_mouse_preset().is_some();
-        let active_id = self.mouse_active_id.clone();
-        let delete_id = active_id.clone();
-
-        v_flex()
-            .gap_2()
-            .child(
-                Label::new("Mouse Presets")
-                    .text_size(rems(0.9375))
-                    .text_color(cx.theme().muted_foreground)
-                    .font_bold(),
-            )
-            .child(
-                h_flex()
-                    .gap_2()
-                    .child(
-                        Combobox::new(&self.mouse_preset_picker)
-                            .placeholder("Select a mouse preset")
-                            .cleanable(false)
-                            .flex_1(),
-                    )
-                    .child(render_delete_confirmation(
-                        cx,
-                        delete_id,
-                        active_name.clone(),
-                        PresetKind::Mouse,
-                    )),
-            )
-            .child(PresetSummary::new(
-                IconName::Mouse,
-                active_name,
-                summary,
-                Button::new("configure-mouse")
-                    .icon(Icon::new(IconName::Wrench).with_size(cx.theme().font_size * 1.875))
-                    .label("Configure")
-                    .disabled(!has_active_preset)
-                    .on_click(cx.listener(move |_this, _event, _window, cx| {
-                        cx.emit(HomeEvent::ConfigureMouseRequested(active_id.clone()));
-                    })),
-            ))
-            .child(render_volume_control(
-                cx,
+        } else {
+            (
                 &self.mouse_volume_slider,
+                &self.mouse_fader_focus,
                 self.mouse_volume,
                 self.mouse_muted,
-                "mouse-mute-toggle",
-                cx.listener(|this, _event, window, cx| {
-                    let slider = this.mouse_volume_slider.clone();
-                    Self::toggle_mute(&mut this.mouse_muted, &slider, window, cx);
-                    this.emit_settings(true, cx);
-                }),
-            ))
-            .child(
-                h_flex()
-                    .gap_2()
-                    .child(
-                        Button::new("import-mouse-preset")
-                            .outline()
-                            .icon(
-                                Icon::new(IconName::Import).with_size(cx.theme().font_size * 1.875),
-                            )
-                            .label("Import preset")
-                            .on_click(cx.listener(|_this, _event, _window, cx| {
-                                cx.emit(HomeEvent::ImportMousesRequested);
-                            })),
-                    )
-                    .child(
-                        Button::new("create-mouse-preset")
-                            .primary()
-                            .icon(Icon::new(IconName::Plus).with_size(cx.theme().font_size * 1.875))
-                            .label("Create preset")
-                            .on_click(cx.listener(|_this, _event, _window, cx| {
-                                cx.emit(HomeEvent::CreateMouseRequested);
-                            })),
-                    ),
+                &self.mouse_activity,
             )
+        };
+        let picker = if keyboard {
+            &self.preset_picker
+        } else {
+            &self.mouse_preset_picker
+        };
+        let edit_id = id.clone();
+        MixerStrip {
+            label: if keyboard { "KEYBOARD" } else { "MOUSE" },
+            icon: if keyboard {
+                IconName::Keyboard
+            } else {
+                IconName::Mouse
+            },
+            picker: Combobox::new(picker)
+                .placeholder("Select a preset")
+                .cleanable(false)
+                .disabled(!self.is_active)
+                .flex_1()
+                .min_w_0()
+                .into_any_element(),
+            delete: render_delete_confirmation(cx, id, name, kind, self.is_active)
+                .into_any_element(),
+            summary,
+            slider: slider.clone(),
+            focus: focus.clone(),
+            volume,
+            muted,
+            enabled: self.is_active,
+            dot: activity.dot.clone(),
+            bars: activity.bars.clone(),
+            mute: Button::new(if keyboard {
+                "keyboard-mute-toggle"
+            } else {
+                "mouse-mute-toggle"
+            })
+            .secondary()
+            .when(muted, |button| button.danger())
+            .disabled(!self.is_active)
+            .icon(if muted {
+                IconName::VolumeX
+            } else {
+                IconName::Volume2
+            })
+            .label(if muted { "Unmute" } else { "Mute" })
+            .on_click(cx.listener(move |this, _, window, cx| {
+                let slider = if keyboard {
+                    this.keyboard_volume_slider.clone()
+                } else {
+                    this.mouse_volume_slider.clone()
+                };
+                let muted = if keyboard {
+                    &mut this.keyboard_muted
+                } else {
+                    &mut this.mouse_muted
+                };
+                Self::toggle_mute(muted, &slider, window, cx);
+                this.emit_settings(true, cx);
+            })),
+            actions: [
+                Button::new(if keyboard {
+                    "edit-preset"
+                } else {
+                    "configure-mouse"
+                })
+                .small()
+                .primary()
+                .icon(if keyboard {
+                    IconName::Pencil
+                } else {
+                    IconName::Wrench
+                })
+                .label("Edit")
+                .tooltip(if keyboard {
+                    "Edit keyboard preset"
+                } else {
+                    "Configure mouse preset"
+                })
+                .disabled(!self.is_active || preset.is_none())
+                .on_click(cx.listener(move |_, _, _, cx| {
+                    cx.emit(if keyboard {
+                        HomeEvent::EditRequested(edit_id.clone())
+                    } else {
+                        HomeEvent::ConfigureMouseRequested(edit_id.clone())
+                    });
+                })),
+                Button::new(if keyboard {
+                    "import-preset"
+                } else {
+                    "import-mouse-preset"
+                })
+                .small()
+                .secondary()
+                .disabled(!self.is_active)
+                .icon(IconName::Import)
+                .label("Import")
+                .on_click(cx.listener(move |_, _, _, cx| {
+                    cx.emit(if keyboard {
+                        HomeEvent::ImportKeyboardRequested
+                    } else {
+                        HomeEvent::ImportMousesRequested
+                    });
+                })),
+                Button::new(if keyboard {
+                    "create-preset"
+                } else {
+                    "create-mouse-preset"
+                })
+                .small()
+                .success()
+                .disabled(!self.is_active)
+                .icon(IconName::Plus)
+                .label("New")
+                .on_click(cx.listener(move |_, _, _, cx| {
+                    cx.emit(if keyboard {
+                        HomeEvent::CreateKeyboardRequested
+                    } else {
+                        HomeEvent::CreateMouseRequested
+                    });
+                })),
+            ],
+        }
     }
 }
 
@@ -300,13 +298,34 @@ impl Render for HomeView {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         v_flex()
             .size_full()
-            .px_8()
-            .pt_6()
-            .pb_6()
-            .gap_12()
+            .p_6()
+            .gap_5()
             .child(self.render_header(cx))
             .child(self.render_app_status(cx))
-            .child(self.render_keyboard_presets(cx))
-            .child(self.render_mouse_section(cx))
+            .child(
+                h_flex()
+                    .relative()
+                    .flex_1()
+                    .min_h_0()
+                    .gap_4()
+                    .when(!self.is_active, |this| {
+                        this.opacity(0.32)
+                            .capture_key_down(|_, _, cx| cx.stop_propagation())
+                    })
+                    .child(self.render_mixer_strip(PresetKind::Keyboard, cx))
+                    .child(self.render_mixer_strip(PresetKind::Mouse, cx))
+                    .when(!self.is_active, |this| {
+                        this.child(
+                            div()
+                                .id("inactive-mixer-blocker")
+                                .absolute()
+                                .inset_0()
+                                .bg(cx.theme().background.opacity(0.5))
+                                .occlude()
+                                .capture_any_mouse_down(|_, _, cx| cx.stop_propagation())
+                                .on_mouse_up(MouseButton::Left, |_, _, cx| cx.stop_propagation()),
+                        )
+                    }),
+            )
     }
 }

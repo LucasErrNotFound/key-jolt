@@ -223,6 +223,9 @@ impl AppShell {
                     });
                     shell.editor_subscription.take();
                     shell.page = AppPage::Home;
+                    shell
+                        .home
+                        .update(cx, |home, cx| home.set_mixer_visible(true, window, cx));
                     window.push_notification(
                         Notification::success(format!("\"{name}\" was saved."))
                             .title("Keyboard preset saved")
@@ -317,6 +320,9 @@ impl AppShell {
                     });
                     shell.editor_subscription.take();
                     shell.page = AppPage::Home;
+                    shell
+                        .home
+                        .update(cx, |home, cx| home.set_mixer_visible(true, window, cx));
                     window.push_notification(
                         Notification::success(format!("\"{name}\" was saved."))
                             .title("Mouse preset saved")

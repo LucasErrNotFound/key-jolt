@@ -1,8 +1,9 @@
 use super::{HomeStartup, HomeView};
 
-use super::components::new_volume_slider;
+use super::activity_meter::ActivityWidgets;
 use super::preset_choice::PresetItems;
 use super::presets::append_loaded_preset;
+use super::volume_fader::new_volume_slider;
 use gpui_kit::component::combobox::{ComboboxEvent, ComboboxState};
 
 use gpui_kit::component::searchable_list::SearchableVec;
@@ -134,7 +135,17 @@ impl HomeView {
             },
         );
 
-        Self {
+        let visibility_subscription =
+            cx.observe_window_visibility(window, |this, _, window, cx| {
+                this.refresh_activity_task(window, cx);
+            });
+        let mut view = Self {
+            keyboard_activity: ActivityWidgets::new("Keyboard", cx),
+            mouse_activity: ActivityWidgets::new("Mouse", cx),
+            keyboard_fader_focus: cx.focus_handle(),
+            mouse_fader_focus: cx.focus_handle(),
+            mixer_visible: true,
+            activity_task: None,
             presets,
             active_id,
             preset_picker,
@@ -152,11 +163,14 @@ impl HomeView {
             startup_warnings,
             settings,
             _subscriptions: vec![
+                visibility_subscription,
                 preset_subscription,
                 mouse_preset_subscription,
                 keyboard_volume_subscription,
                 mouse_volume_subscription,
             ],
-        }
+        };
+        view.refresh_activity_task(window, cx);
+        view
     }
 }

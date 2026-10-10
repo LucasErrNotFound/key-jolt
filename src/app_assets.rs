@@ -10,6 +10,8 @@ gpui_kit::assets::icon_assets!(
         Keyboard,
         Mouse,
         Import,
+        Trash,
+        Plus,
         Pencil,
         Wrench,
         VolumeX,

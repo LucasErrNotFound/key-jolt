@@ -1,12 +1,16 @@
+mod activity;
+mod activity_meter;
 mod components;
 mod events;
 mod lifecycle;
+mod meter_state;
+mod mixer_strip;
 mod preset_choice;
-mod preset_summary;
 mod presets;
 mod settings;
 mod startup;
 mod view;
+mod volume_fader;
 
 use crate::presets::LoadedPreset;
 use crate::settings::store::AppSettings;
@@ -25,6 +29,12 @@ pub(crate) struct HomeView {
     mouse_presets: Vec<PresetChoice>,
     mouse_active_id: SharedString,
     mouse_preset_picker: Entity<ComboboxState<PresetItems>>,
+    keyboard_activity: activity_meter::ActivityWidgets,
+    mouse_activity: activity_meter::ActivityWidgets,
+    keyboard_fader_focus: FocusHandle,
+    mouse_fader_focus: FocusHandle,
+    mixer_visible: bool,
+    activity_task: Option<Task<()>>,
     keyboard_volume: f32,
     keyboard_volume_slider: Entity<SliderState>,
     mouse_volume: f32,
