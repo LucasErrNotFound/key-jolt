@@ -304,9 +304,7 @@ impl KeyboardEditorView {
                             .child(key.label)
                             .when_some(group, |label, index| {
                                 label.child(
-                                    div()
-                                        .text_size(rems(0.5))
-                                        .child(format!("G{}", index + 1)),
+                                    div().text_size(rems(0.5)).child(format!("G{}", index + 1)),
                                 )
                             }),
                     )
@@ -500,8 +498,7 @@ impl KeyboardEditorView {
 }
 
 fn keyboard_row_width(row: &[KeySpec]) -> f32 {
-    row.iter().map(|key| key.width / 16.).sum::<f32>()
-        + row.len().saturating_sub(1) as f32 * 0.25
+    row.iter().map(|key| key.width / 16.).sum::<f32>() + row.len().saturating_sub(1) as f32 * 0.25
 }
 
 fn widest_keyboard_row(rows: &[&[KeySpec]]) -> f32 {

@@ -171,5 +171,4 @@ impl KeyboardEditorView {
                     ),
             )
     }
-
 }
