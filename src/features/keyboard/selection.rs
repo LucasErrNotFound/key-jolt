@@ -11,6 +11,22 @@ use crate::presets::canonical_key_identifier as canonical_key_id;
 use gpui_kit::*;
 
 impl KeyboardEditorView {
+    pub(super) fn replace_editing_selection(
+        &mut self,
+        keys: &[&'static str],
+        cx: &mut Context<Self>,
+    ) {
+        let active = self.keyboard_layout.index();
+        if self.selected_keys[active] == keys {
+            return;
+        }
+        self.selected_keys[active] = keys.to_vec();
+        if self.sync_selections {
+            set_selection_sync(&mut self.selected_keys, self.keyboard_layout, true);
+        }
+        cx.notify();
+    }
+
     pub(super) fn is_selected(&self, key_id: &str) -> bool {
         self.selected_keys[self.keyboard_layout.index()].contains(&key_id)
     }
@@ -43,22 +59,22 @@ impl KeyboardEditorView {
 
         let mut groups = vec![SelectionGroup {
             id: "all-keys",
-            label: "All keys",
+            label: "All",
             keys: self.keyboard_layout.key_ids(),
         }];
         groups.push(SelectionGroup {
             id: "letters",
-            label: "A–Z",
+            label: "Letters",
             keys: LETTER_KEYS.to_vec(),
         });
         groups.push(SelectionGroup {
             id: "number-row",
-            label: "Number row",
+            label: "Numbers",
             keys: NUMBER_ROW_KEYS.to_vec(),
         });
         groups.push(SelectionGroup {
             id: "function-row",
-            label: "Function row",
+            label: "Function",
             keys: TKL_FUNCTION_ROW.iter().map(|key| key.id).collect(),
         });
 
@@ -93,7 +109,7 @@ impl KeyboardEditorView {
         if self.keyboard_layout != KeyboardLayout::Compact {
             groups.push(SelectionGroup {
                 id: "navigation",
-                label: "Navigation keys",
+                label: "Navigation",
                 keys: NAVIGATION_KEYS.to_vec(),
             });
         }
@@ -197,6 +213,8 @@ impl KeyboardEditorView {
             return;
         }
 
+        self.selection_drag = None;
+        self.suppress_key_click = false;
         for file in &mut self.files {
             if enabled {
                 file.begin_assignment_sync(self.keyboard_layout);
@@ -253,6 +271,9 @@ impl KeyboardEditorView {
             self.selected_keys[self.keyboard_layout.index()].clear();
         }
 
+        self.selection_drag = None;
+        self.suppress_key_click = false;
+        self.canvas_geometry.borrow_mut().keys.clear();
         self.keyboard_layout = next_layout;
         let count = maximum_assigned_sound_count(
             self.files

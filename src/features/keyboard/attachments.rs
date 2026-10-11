@@ -1,23 +1,14 @@
-use super::{KeyboardEditorEvent, KeyboardEditorView};
-
 use super::assignment::{SelectionAssignment, assignment_state};
 use super::model::AudioFile;
+use super::{KeyboardEditorEvent, KeyboardEditorView};
 use crate::features::preset_editor::{PreviewState, UploadState};
-
 use gpui_kit::assets::IconName;
 use gpui_kit::base::{Checkbox, CheckboxIndicator, CheckboxState};
-
-use gpui_kit::component::attachment::{
-    Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia,
-    AttachmentStatus, AttachmentTitle,
-};
-
 use gpui_kit::component::button::{Button, ButtonVariants};
-
-use gpui_kit::component::empty::{
-    Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyMediaVariant, EmptyTitle,
+use gpui_kit::component::dialog::{
+    AlertDialog, DialogAction, DialogClose, DialogDescription, DialogFooter, DialogHeader,
+    DialogTitle,
 };
-
 use gpui_kit::component::spinner::Spinner;
 use gpui_kit::component::*;
 use gpui_kit::prelude::FluentBuilder;
@@ -37,146 +28,18 @@ impl KeyboardEditorView {
                 SelectionAssignment::All => CheckboxState::Checked,
                 SelectionAssignment::Mixed => CheckboxState::Indeterminate,
             };
-        let checked = state == CheckboxState::Checked;
-        let mixed = state == CheckboxState::Indeterminate;
-        let disabled = selection.is_empty()
-            || !matches!(file.state, UploadState::Success | UploadState::Complete);
-        let hovered = self.hovered_file == Some(id);
-        let entity = cx.entity().downgrade();
-
-        let media_content = match file.state {
-            UploadState::Uploading => Spinner::new()
-                .small()
-                .color(cx.theme().primary)
-                .into_any_element(),
-
-            UploadState::Success => Icon::new(IconName::CircleCheck)
-                .with_size(cx.theme().font_size * 1.125)
-                .text_color(cx.theme().green)
-                .into_any_element(),
-
-            UploadState::Complete => {
-                let preview_entity = entity.clone();
-                let path = file.path.clone();
-                let is_playing = file.preview_state == PreviewState::Playing;
-                let preview_button = Button::new(format!("preview-file-{id}"))
-                    .ghost()
-                    .xsmall()
-                    .icon(if is_playing {
-                        IconName::Close
-                    } else if hovered {
-                        IconName::Play
-                    } else {
-                        IconName::FileVolume
-                    })
-                    .accessibility_label(if is_playing {
-                        format!("Stop preview of {}", file.name)
-                    } else {
-                        format!("Play preview of {}", file.name)
-                    })
-                    .tooltip(if is_playing {
-                        "Stop preview"
-                    } else {
-                        "Play preview"
-                    })
-                    .on_click(move |_event, _window, cx| {
-                        _ = preview_entity.update(cx, |_, cx| {
-                            if is_playing {
-                                cx.emit(KeyboardEditorEvent::StopPreviewRequested {
-                                    file_id: Some(id),
-                                });
-                            } else {
-                                cx.emit(KeyboardEditorEvent::PreviewRequested {
-                                    file_id: id,
-                                    path: path.clone(),
-                                });
-                            }
-                        });
-                    });
-
-                div()
-                    .id(format!("preview-hover-{id}"))
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .on_hover({
-                        let entity = entity.clone();
-
-                        move |is_hovered, _window, cx| {
-                            _ = entity.update(cx, |view, cx| {
-                                if *is_hovered {
-                                    view.hovered_file = Some(id);
-                                } else if view.hovered_file == Some(id) {
-                                    view.hovered_file = None;
-                                }
-                                cx.notify();
-                            });
-                        }
-                    })
-                    .child(preview_button)
-                    .into_any_element()
-            }
-
-            UploadState::Failed => Icon::new(IconName::CircleX)
-                .with_size(cx.theme().font_size * 1.125)
-                .text_color(cx.theme().red)
-                .into_any_element(),
-        };
-
-        let media = AttachmentMedia::new().child(media_content);
-
-        let attachment_status = match file.state {
-            UploadState::Uploading => AttachmentStatus::Uploading,
-            UploadState::Success | UploadState::Complete => AttachmentStatus::Complete,
-            UploadState::Failed => AttachmentStatus::Failed,
-        };
-
-        let description = match file.state {
-            UploadState::Uploading => SharedString::from("Uploading"),
-            UploadState::Success | UploadState::Complete => match &file.preview_state {
-                PreviewState::Error(message) => message.clone(),
-                _ => file.size.clone().unwrap_or_else(|| "Preparing...".into()),
-            },
-            UploadState::Failed => SharedString::from("Upload failed"),
-        };
-
-        let remove_entity = cx.entity().downgrade();
+        let ready = matches!(file.state, UploadState::Success | UploadState::Complete);
+        let playing = file.preview_state == PreviewState::Playing;
+        let disabled = selection.is_empty() || !ready;
         let checkbox_entity = cx.entity().downgrade();
-
-        let attachment = Attachment::new()
-            .small()
-            .status(attachment_status)
-            .flex_1()
-            .media(AttachmentMedia::new().child(media))
-            .content(
-                AttachmentContent::new()
-                    .title(AttachmentTitle::new(file.name.clone()))
-                    .description(AttachmentDescription::new(description)),
-            )
-            .actions(
-                AttachmentActions::new().child(
-                    Button::new(format!("remove-file-{id}"))
-                        .ghost()
-                        .xsmall()
-                        .icon(IconName::Close)
-                        .accessibility_label(format!("Remove {}", file.name))
-                        .tooltip("Remove")
-                        .on_click(move |_event, _window, cx| {
-                            _ = remove_entity.update(cx, |view, cx| {
-                                view.remove_file(id, cx);
-                            });
-                        }),
-                ),
-            );
-
-        let checkbox = Checkbox::new(format!("select-file-{id}"))
+        let preview_entity = cx.entity().downgrade();
+        let path = file.path.clone();
+        let checkbox = Checkbox::new(format!("assign-sound-{id}"))
             .state(state)
             .disabled(disabled)
             .accessibility_label(format!("Assign {} to selected keys", file.name))
-            .on_change(move |state, _window, _cx, cx| {
-                _ = checkbox_entity.update(cx, |view, cx| {
-                    view.set_file_assignment(id, state, cx);
-                });
+            .on_change(move |state, _, _, cx| {
+                _ = checkbox_entity.update(cx, |view, cx| view.set_file_assignment(id, state, cx));
             })
             .child(
                 CheckboxIndicator::new()
@@ -187,66 +50,201 @@ impl KeyboardEditorView {
                     .justify_center()
                     .size_4()
                     .border_1()
-                    .border_color(cx.theme().muted_foreground.opacity(0.4))
-                    .when(checked, |this| {
-                        this.bg(cx.theme().primary)
+                    .border_color(cx.theme().input)
+                    .rounded(cx.theme().radius_tokens().sm)
+                    .when(state != CheckboxState::Unchecked, |indicator| {
+                        indicator
+                            .bg(cx.theme().primary)
                             .border_color(cx.theme().primary)
-                            .child(
+                            .child(if state == CheckboxState::Checked {
                                 Icon::new(IconName::Check)
-                                    .with_size(cx.theme().font_size * 0.75)
-                                    .text_color(cx.theme().primary_foreground),
-                            )
-                    })
-                    .when(mixed, |this| {
-                        this.bg(cx.theme().primary)
-                            .border_color(cx.theme().primary)
-                            .text_color(cx.theme().primary_foreground)
-                            .child("−")
+                                    .with_size(px(12.))
+                                    .text_color(cx.theme().primary_foreground)
+                                    .into_any_element()
+                            } else {
+                                div()
+                                    .text_color(cx.theme().primary_foreground)
+                                    .child("−")
+                                    .into_any_element()
+                            })
                     }),
             );
-
-        h_flex()
-            .items_center()
-            .gap_3()
+        let preview = Button::new(format!("preview-file-{id}"))
+            .secondary()
+            .small()
+            .icon(if playing {
+                IconName::Close
+            } else {
+                IconName::Play
+            })
+            .disabled(!ready)
+            .accessibility_label(format!(
+                "{} preview of {}",
+                if playing { "Stop" } else { "Play" },
+                file.name
+            ))
+            .tooltip(if playing {
+                "Stop preview"
+            } else {
+                "Play preview"
+            })
+            .on_click(move |_, _, cx| {
+                _ = preview_entity.update(cx, |_, cx| {
+                    if playing {
+                        cx.emit(KeyboardEditorEvent::StopPreviewRequested { file_id: Some(id) });
+                    } else {
+                        cx.emit(KeyboardEditorEvent::PreviewRequested {
+                            file_id: id,
+                            path: path.clone(),
+                        });
+                    }
+                });
+            });
+        v_flex()
             .w_full()
-            .child(attachment)
+            .p_3()
+            .gap_2()
+            .border_1()
+            .border_color(cx.theme().border)
+            .rounded(cx.theme().radius_tokens().lg)
+            .bg(cx.theme().background)
             .child(
-                div()
-                    .w(rems(1.75))
-                    .flex_shrink_0()
-                    .flex()
+                h_flex()
+                    .gap_2()
                     .items_center()
-                    .justify_center()
-                    .child(checkbox),
+                    .child(preview)
+                    .child(
+                        v_flex()
+                            .flex_1()
+                            .min_w_0()
+                            .gap_1()
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .font_medium()
+                                    .truncate()
+                                    .child(file.name.clone()),
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(cx.theme().muted_foreground)
+                                    .child(match &file.preview_state {
+                                        PreviewState::Error(message) => message.clone(),
+                                        _ => match file.state {
+                                            UploadState::Uploading => "Uploading…".into(),
+                                            UploadState::Failed => "Upload failed".into(),
+                                            _ => file
+                                                .size
+                                                .clone()
+                                                .unwrap_or_else(|| "Audio file".into()),
+                                        },
+                                    }),
+                            ),
+                    )
+                    .child(div().flex_shrink_0().child(checkbox))
+                    .child(self.render_delete_sound(&file, cx)),
+            )
+            .child(if ready {
+                self.render_waveform(id, playing, cx)
+            } else if file.state == UploadState::Uploading {
+                Spinner::new().small().into_any_element()
+            } else {
+                div()
+                    .text_xs()
+                    .text_color(cx.theme().danger)
+                    .child("Try uploading this file again.")
+                    .into_any_element()
+            })
+            .when(
+                !selection.is_empty() && state != CheckboxState::Unchecked,
+                |row| {
+                    row.child(
+                        h_flex()
+                            .justify_between()
+                            .items_center()
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(cx.theme().muted_foreground)
+                                    .child(if state == CheckboxState::Indeterminate {
+                                        "Assigned to some selected keys"
+                                    } else {
+                                        "Assigned to all selected keys"
+                                    }),
+                            )
+                            .child(
+                                Button::new(format!("unassign-sound-{id}"))
+                                    .ghost()
+                                    .xsmall()
+                                    .label("Unassign")
+                                    .tooltip("Unassign from selected keys only")
+                                    .on_click(cx.listener(move |this, _, _, cx| {
+                                        this.set_file_assignment(id, CheckboxState::Unchecked, cx);
+                                    })),
+                            ),
+                    )
+                },
             )
     }
 
+    fn render_delete_sound(&self, file: &AudioFile, cx: &mut Context<Self>) -> AnyElement {
+        let id = file.id;
+        let button = Button::new(format!("delete-sound-{id}"))
+            .danger()
+            .outline()
+            .small()
+            .icon(IconName::Trash)
+            .accessibility_label(format!("Delete {} from preset", file.name))
+            .tooltip("Delete sound from preset");
+        if file.assigned_keys.iter().any(|keys| !keys.is_empty())
+            || file
+                .independent_assigned_keys
+                .as_ref()
+                .is_some_and(|layouts| layouts.iter().any(|keys| !keys.is_empty()))
+        {
+            let entity = cx.entity().downgrade();
+            let name = file.name.clone();
+            AlertDialog::new(cx).trigger(button)
+                .on_ok(move |_, _, cx| {
+                    _ = entity.update(cx, |view, cx| view.remove_file(id, cx));
+                    true
+                })
+                .content(move |content, _, _| {
+                    content.child(DialogHeader::new()
+                        .child(DialogTitle::new().child("Delete sound from preset?"))
+                        .child(DialogDescription::new().child(format!("{} will be removed from every keyboard size. Use Unassign to remove it only from selected keys.", name))))
+                        .child(DialogFooter::new()
+                            .child(DialogClose::new().child(Button::new(format!("cancel-delete-sound-{id}")).outline().label("Keep sound")))
+                            .child(DialogAction::new().child(Button::new(format!("confirm-delete-sound-{id}")).danger().label("Delete sound"))))
+                }).into_any_element()
+        } else {
+            button
+                .on_click(cx.listener(move |this, _, _, cx| this.remove_file(id, cx)))
+                .into_any_element()
+        }
+    }
+
     pub(super) fn render_upload_area(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        Empty::new()
+        Button::new("keyboard-audio-drop-zone")
+            .outline()
             .w_full()
-            .border_1()
-            .border_color(cx.theme().muted_foreground.opacity(0.25))
-            .header(
-                EmptyHeader::new()
-                    .media(
-                        EmptyMedia::new()
-                            .with_variant(EmptyMediaVariant::Icon)
-                            .child(
-                                Icon::new(IconName::Upload).with_size(cx.theme().font_size * 1.375),
-                            ),
-                    )
-                    .title(EmptyTitle::new().child("Add audio files"))
-                    .description(EmptyDescription::new().child("Select one or more audio files.")),
-            )
-            .content(
-                EmptyContent::new().flex_row().justify_center().child(
-                    Button::new("upload-files")
-                        .primary()
-                        .label("Upload Files...")
-                        .on_click(cx.listener(|this, _event, window, cx| {
-                            this.open_file_picker(window, cx);
-                        })),
-                ),
-            )
+            .h(rems(2.5))
+            .cursor_pointer()
+            .border_dashed()
+            .border_color(cx.theme().border)
+            .rounded(cx.theme().radius_tokens().lg)
+            .bg(cx.theme().background)
+            .text_color(cx.theme().muted_foreground)
+            .icon(IconName::Upload)
+            .label("Add or drop audio files")
+            .accessibility_label("Add or drop audio files")
+            .tooltip("Choose audio files or drop them here, then assign them to selected keys")
+            .on_drop(cx.listener(|this, paths: &ExternalPaths, window, cx| {
+                this.begin_uploads(paths.paths().to_vec(), window, cx);
+            }))
+            .on_click(cx.listener(|this, _, window, cx| {
+                this.open_file_picker(window, cx);
+            }))
     }
 }

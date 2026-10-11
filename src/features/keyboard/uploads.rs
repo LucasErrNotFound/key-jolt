@@ -124,6 +124,8 @@ impl KeyboardEditorView {
             self.upload_tasks.insert(id, task);
         }
 
+        self.show_sound_catalog = true;
+        self.refresh_audio_details(cx);
         cx.notify();
     }
 
@@ -175,9 +177,12 @@ impl KeyboardEditorView {
 
         self.upload_tasks.remove(&id);
 
-        if self.hovered_file == Some(id) {
-            self.hovered_file = None;
+        self.audio_details.remove(&id);
+        if let Some(job) = self.analysis_job.as_ref().filter(|job| job.id == id) {
+            job.cancelled
+                .store(true, std::sync::atomic::Ordering::Relaxed);
         }
+        self.refresh_audio_details(cx);
 
         self.update_playback_mode_for_assignment_change(previous_count);
 

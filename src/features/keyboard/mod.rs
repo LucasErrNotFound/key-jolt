@@ -1,17 +1,25 @@
 mod assignment;
 mod attachments;
+mod audio_details;
 mod canvas;
 mod commands;
 mod discard_dialog;
+mod drag_selection;
 mod events;
+mod header;
+mod inspector;
 mod layout;
 mod lifecycle;
 mod model;
 mod playback;
 mod preset;
 mod selection;
+mod selection_math;
+mod sound_groups;
 mod uploads;
 mod view;
+mod waveform;
+mod waveform_math;
 
 use self::layout::KeyboardLayout;
 use self::model::AudioFile;
@@ -38,7 +46,13 @@ pub(crate) struct KeyboardEditorView {
     next_file_id: u64,
     upload_tasks: HashMap<u64, Task<()>>,
 
-    hovered_file: Option<u64>,
+    canvas_geometry: drag_selection::SharedCanvasGeometry,
+    canvas_focus: FocusHandle,
+    selection_drag: Option<drag_selection::SelectionDrag>,
+    suppress_key_click: bool,
+    show_sound_catalog: bool,
+    audio_details: HashMap<u64, audio_details::AudioDetails>,
+    analysis_job: Option<audio_details::AnalysisJob>,
 
     playback_mode: PlaybackMode,
     preferred_playback_mode: PlaybackMode,

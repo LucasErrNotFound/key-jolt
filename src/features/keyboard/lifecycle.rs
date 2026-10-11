@@ -19,7 +19,9 @@ impl KeyboardEditorView {
         window: &mut Window,
         cx: &mut App,
     ) -> Entity<Self> {
-        cx.new(|cx| Self::new(preset_id, preset_name, preset_data, window, cx))
+        let view = cx.new(|cx| Self::new(preset_id, preset_name, preset_data, window, cx));
+        view.update(cx, |view, cx| view.refresh_audio_details(cx));
+        view
     }
 
     pub(crate) fn set_preview_state(
@@ -120,7 +122,13 @@ impl KeyboardEditorView {
             files,
             next_file_id,
             upload_tasks: HashMap::new(),
-            hovered_file: None,
+            canvas_geometry: Default::default(),
+            canvas_focus: cx.focus_handle(),
+            selection_drag: None,
+            suppress_key_click: false,
+            show_sound_catalog: false,
+            audio_details: HashMap::new(),
+            analysis_job: None,
             playback_mode,
             preferred_playback_mode,
             keyboard_layout,
