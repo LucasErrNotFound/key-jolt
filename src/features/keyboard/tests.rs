@@ -518,3 +518,39 @@ fn random_playback_requires_multiple_sounds_for_the_same_key() {
         2
     );
 }
+
+#[test]
+fn marquee_selection_targets_sound_edits_without_inheriting_previous_keys() {
+    let selected = super::selection_math::marquee_selection(&["a", "b"], &["space"], false);
+    let mut sound_a = vec!["a".into(), "b".into()];
+    let mut sound_b = Vec::new();
+    set_sound_assignment(&mut sound_b, &selected, true);
+    set_sound_assignment(&mut sound_a, &selected, false);
+    assert_eq!(sound_a, vec!["a", "b"]);
+    assert_eq!(sound_b, vec!["space"]);
+}
+
+#[test]
+fn synchronized_marquee_projects_aliases_and_leaves_assignments_unchanged() {
+    let file = AudioFile::new(0, "sound.wav".into(), "Sound");
+    let assignments = file.assigned_keys.clone();
+    let mut selected = [
+        Vec::new(),
+        Vec::new(),
+        super::selection_math::marquee_selection(&[], &["shift_left", "space"], false),
+    ];
+    set_selection_sync(&mut selected, KeyboardLayout::Compact, true);
+    assert!(selected[0].contains(&"left_shift"));
+    assert!(selected[1].contains(&"left_shift"));
+    assert!(selected[2].contains(&"shift_left"));
+    assert_eq!(file.assigned_keys, assignments);
+}
+
+#[test]
+fn control_marquee_removes_a_key_once_across_repeated_pointer_updates() {
+    let baseline = ["a", "space"];
+    for _ in 0..4 {
+        let selection = super::selection_math::marquee_selection(&baseline, &["space", "b"], true);
+        assert_eq!(selection, vec!["a", "b"]);
+    }
+}
