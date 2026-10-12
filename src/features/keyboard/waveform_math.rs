@@ -1,22 +1,6 @@
-pub(super) const WAVEFORM_BARS: usize = 48;
-
-pub(super) fn waveform_peaks(samples: &[f32]) -> [f32; WAVEFORM_BARS] {
-    let mut peaks = [0_f32; WAVEFORM_BARS];
-    if samples.is_empty() {
-        return peaks;
-    }
-    for (index, sample) in samples.iter().enumerate() {
-        if sample.is_finite() {
-            let bin = index * WAVEFORM_BARS / samples.len();
-            peaks[bin] = peaks[bin].max(sample.abs().min(1.));
-        }
-    }
-    peaks
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::features::preset_editor::{WAVEFORM_BARS, waveform_peaks};
 
     #[test]
     fn silence_and_empty_audio_stay_flat() {

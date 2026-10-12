@@ -118,28 +118,19 @@ impl KeyboardEditorView {
                                         })),
                                 )
                             })
-                            .child(self.render_upload_area(cx))
-                            .child(Separator::horizontal())
-                            .child(
-                                div()
-                                    .font_medium()
-                                    .text_sm()
-                                    .child("Playback mode · entire preset"),
-                            )
-                            .child(self.render_playback(cx))
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(cx.theme().muted_foreground)
-                                    .child("Random is available when a key in this keyboard size has two or more sounds."),
-                            ),
+                            .child(self.render_upload_area(cx)),
                     ),
             )
     }
 
     pub(super) fn render_sync_footer(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        h_flex()
-            .flex_shrink_0()
+        let playback = v_flex()
+            .px_4()
+            .py_3()
+            .border_t_1()
+            .border_color(cx.theme().border)
+            .child(self.render_playback(cx));
+        let sync = h_flex()
             .px_4()
             .py_3()
             .gap_3()
@@ -169,6 +160,7 @@ impl KeyboardEditorView {
                     .on_change(
                         cx.listener(|this, checked, _, cx| this.set_sync_selections(*checked, cx)),
                     ),
-            )
+            );
+        v_flex().flex_shrink_0().child(playback).child(sync)
     }
 }

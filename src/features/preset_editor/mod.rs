@@ -1,3 +1,14 @@
+mod audio_analysis;
+mod playback_selector;
+mod waveform;
+mod waveform_math;
+
+pub(crate) use audio_analysis::{AudioDetails, analyze_file};
+pub(crate) use playback_selector::PlaybackSelector;
+pub(crate) use waveform::render_audio_waveform;
+#[cfg(test)]
+pub(crate) use waveform_math::{WAVEFORM_BARS, waveform_peaks};
+
 use gpui_kit::SharedString;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
