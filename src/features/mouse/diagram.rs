@@ -1,216 +1,361 @@
 use super::MouseEditorView;
+use super::diagram_geometry::click_geometry;
 use super::model::MouseButton;
-use gpui_kit::component::label::Label;
+use gpui_kit::base::Button as HitButton;
+use gpui_kit::component::button::Button;
+use gpui_kit::component::tooltip::Tooltip;
 use gpui_kit::component::*;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
 impl MouseEditorView {
-    pub(super) fn render_mouse_button(
-        &self,
-        button: MouseButton,
-        label: impl Into<SharedString>,
-        cx: &mut Context<Self>,
-    ) -> impl IntoElement {
-        let is_selected = self.selected_button == button;
-        let count = self
-            .files
-            .iter()
-            .filter(|file| file.assigned_buttons[button.index()])
-            .count();
-        let entity = cx.entity().downgrade();
-
-        h_flex()
-            .id(format!("mouse-button-row-{}", button.index()))
-            .w_full()
-            .items_center()
-            .justify_between()
-            .gap_2()
-            .px_3()
-            .py_2()
-            .border_1()
-            .rounded(cx.theme().radius)
-            .border_color(if is_selected {
-                cx.theme().primary
-            } else {
-                cx.theme().muted_foreground.opacity(0.25)
-            })
-            .when(is_selected, |this| {
-                this.bg(cx.theme().primary.opacity(0.07))
-            })
-            .child(Label::new(label.into()).font_medium())
-            .child(
-                Label::new(if count == 0 {
-                    "Not set".to_string()
-                } else {
-                    format!("{count} sound{}", if count == 1 { "" } else { "s" })
-                })
-                .text_sm()
-                .text_color(cx.theme().muted_foreground),
-            )
-            .on_click(move |_, _, cx| {
-                _ = entity.update(cx, |view, cx| view.select_button(button, cx));
-            })
+    pub(super) fn button_color(button: MouseButton, cx: &App) -> Hsla {
+        match button {
+            MouseButton::Left => cx.theme().blue,
+            MouseButton::Right => cx.theme().green,
+            MouseButton::Middle => cx.theme().magenta,
+        }
     }
 
-    pub(super) fn render_mouse_diagram(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let left_active = self.selected_button == MouseButton::Left;
-        let right_active = self.selected_button == MouseButton::Right;
-        let middle_active = self.selected_button == MouseButton::Middle;
-        let entity = cx.entity().downgrade();
-        let left_entity = entity.clone();
-        let right_entity = entity.clone();
-        let middle_entity = entity;
-        let highlight_color = cx.theme().primary.opacity(0.14);
-        let diagram_unit = cx.theme().font_size;
+    fn button_sound_count(&self, button: MouseButton) -> usize {
+        self.files
+            .iter()
+            .filter(|file| file.assigned_buttons[button.index()])
+            .count()
+    }
 
-        v_flex()
-            .relative()
-            .w(rems(11.25))
-            .h(rems(16.875))
-            .rounded_full()
-            .border_1()
-            .border_color(cx.theme().muted_foreground.opacity(0.35))
-            .overflow_hidden()
-            .child(
-                canvas(
-                    |bounds, _, _| bounds,
-                    move |_, bounds, window, _| {
-                        let origin = bounds.origin;
-                        let top = origin.y + px(1.0);
-                        let left = origin.x + px(1.0);
-                        let right = origin.x + bounds.size.width - px(1.0);
-                        let center = origin.x + bounds.size.width / 2.;
-                        let radius = bounds.size.width / 2. - px(1.0);
-                        let control_factor = 0.552_284_8;
-                        let divider_left = center - diagram_unit * 1.8125 / 2.;
-                        let divider_right = center + diagram_unit * 1.8125 / 2.;
-                        let button_bottom = top + diagram_unit * 7.1875;
-
-                        if left_active {
-                            let mut path = PathBuilder::fill();
-                            path.move_to(point(center, top));
-                            path.cubic_bezier_to(
-                                point(left, top + radius),
-                                point(center - radius * control_factor, top),
-                                point(left, top + radius * (1. - control_factor)),
-                            );
-                            path.line_to(point(left, button_bottom));
-                            path.line_to(point(divider_left, button_bottom));
-                            path.line_to(point(divider_left, top));
-                            path.close();
-                            if let Ok(path) = path.build() {
-                                window.paint_path(path, highlight_color);
-                            }
-                        }
-
-                        if right_active {
-                            let mut path = PathBuilder::fill();
-                            path.move_to(point(center, top));
-                            path.cubic_bezier_to(
-                                point(right, top + radius),
-                                point(center + radius * control_factor, top),
-                                point(right, top + radius * (1. - control_factor)),
-                            );
-                            path.line_to(point(right, button_bottom));
-                            path.line_to(point(divider_right, button_bottom));
-                            path.line_to(point(divider_right, top));
-                            path.close();
-                            if let Ok(path) = path.build() {
-                                window.paint_path(path, highlight_color);
-                            }
-                        }
-                    },
-                )
-                .absolute()
-                .inset_0()
-                .size_full(),
-            )
+    fn render_button_card(&self, button: MouseButton, cx: &mut Context<Self>) -> impl IntoElement {
+        let count = self.button_sound_count(button);
+        let selected = self.selected_button == button;
+        let color = Self::button_color(button, cx);
+        let summary = if count == 0 {
+            "No sounds assigned".to_string()
+        } else {
+            format!("{count} sound{}", if count == 1 { "" } else { "s" })
+        };
+        Button::new(format!("mouse-button-card-{}", button.index()))
+            .outline()
+            .w_full()
+            .min_w_0()
+            .h(rems(3.5))
+            .rounded(cx.theme().radius_tokens().lg)
+            .bg(if count > 0 {
+                color.opacity(0.08)
+            } else {
+                cx.theme().muted.opacity(0.25)
+            })
+            .border_color(if selected {
+                cx.theme().primary
+            } else {
+                cx.theme().border
+            })
+            .when(selected, |card| card.border_2())
+            .accessibility_label(format!(
+                "{}, {}{}",
+                button.label(),
+                summary,
+                if selected { ", selected" } else { "" },
+            ))
+            .tooltip(format!("Edit sounds for {}", button.label()))
             .child(
                 h_flex()
-                    .mx(px(1.0))
-                    .mt(px(1.0))
-                    .h(rems(7.1875))
-                    .items_stretch()
+                    .w_full()
+                    .min_w_0()
+                    .gap_2()
+                    .items_start()
                     .child(
                         div()
-                            .id("mouse-left-zone")
-                            .flex_1()
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .child(
-                                Label::new("LEFT")
-                                    .text_xs()
-                                    .text_color(cx.theme().muted_foreground),
-                            )
-                            .on_click(move |_, _, cx| {
-                                _ = left_entity.update(cx, |view, cx| {
-                                    view.select_button(MouseButton::Left, cx)
-                                });
-                            }),
+                            .mt(rems(0.3))
+                            .size(rems(0.5))
+                            .flex_shrink_0()
+                            .rounded_full()
+                            .bg(color),
                     )
                     .child(
                         v_flex()
-                            .id("mouse-middle-zone")
-                            .w(rems(1.8125))
-                            .h_full()
-                            .items_center()
-                            .justify_center()
-                            .border_x_1()
-                            .border_color(cx.theme().muted_foreground.opacity(0.25))
-                            .bg(cx.theme().muted.opacity(0.12))
+                            .min_w_0()
+                            .flex_1()
+                            .items_start()
+                            .gap_1()
                             .child(
                                 div()
-                                    .id("mouse-middle-wheel")
-                                    .w(rems(0.875))
-                                    .h(rems(2.25))
+                                    .text_sm()
+                                    .font_semibold()
+                                    .truncate()
+                                    .child(button.label()),
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(cx.theme().muted_foreground)
+                                    .truncate()
+                                    .child(summary),
+                            ),
+                    ),
+            )
+            .on_click(cx.listener(move |this, _, _, cx| this.select_button(button, cx)))
+    }
+
+    fn render_click_zone(&self, button: MouseButton, cx: &mut Context<Self>) -> impl IntoElement {
+        let selected = self.selected_button == button;
+        let primary = cx.theme().primary;
+        let label = SharedString::from(button.label());
+        HitButton::new(format!("mouse-zone-{}", button.index()))
+            .flex_1()
+            .min_w_0()
+            .h_full()
+            .text_sm()
+            .selected(selected)
+            .text_color(cx.theme().muted_foreground)
+            .styles(|styles| styles.selected(|style| style.text_color(primary)))
+            .hover(|style| style.text_color(primary))
+            .focus(|style| style.text_color(primary).font_weight(FontWeight::BOLD))
+            .accessibility_label(format!("Select {}", button.label()))
+            .tooltip(move |window, cx| Tooltip::new(label.clone()).build(window, cx))
+            .child(if button == MouseButton::Left {
+                "L"
+            } else {
+                "R"
+            })
+            .on_click(cx.listener(move |this, _, _, cx| this.select_button(button, cx)))
+    }
+
+    fn render_click_fills(&self, cx: &App) -> impl IntoElement {
+        let fill = |button| {
+            let color = Self::button_color(button, cx);
+            if self.selected_button == button {
+                color.opacity(0.3)
+            } else if self.button_sound_count(button) > 0 {
+                color.opacity(0.18)
+            } else {
+                cx.theme().muted.opacity(0.25)
+            }
+        };
+        let left_fill = fill(MouseButton::Left);
+        let right_fill = fill(MouseButton::Right);
+        let border = cx.theme().border;
+        canvas(
+            |bounds, window, _| {
+                click_geometry(
+                    f32::from(bounds.size.width),
+                    f32::from(window.rem_size()) * 6.,
+                    f32::from(window.rem_size()) * 1.75,
+                )
+            },
+            move |bounds, geometry, window, _| {
+                let Some(g) = geometry else {
+                    return;
+                };
+                let at = |x, y| point(bounds.origin.x + px(x), bounds.origin.y + px(y));
+                let radius = point(px(g.radius), px(g.radius));
+                let mut left = PathBuilder::fill();
+                left.move_to(at(g.left, g.bottom));
+                left.line_to(at(g.left, g.curve_y));
+                left.arc_to(radius, px(0.), false, true, at(g.inner_left, g.cut_y));
+                left.line_to(at(g.inner_left, g.bottom));
+                left.close();
+                if let Ok(path) = left.build() {
+                    window.paint_path(path, left_fill);
+                }
+                let mut right = PathBuilder::fill();
+                right.move_to(at(g.inner_right, g.bottom));
+                right.line_to(at(g.inner_right, g.cut_y));
+                right.arc_to(radius, px(0.), false, true, at(g.right, g.curve_y));
+                right.line_to(at(g.right, g.bottom));
+                right.close();
+                if let Ok(path) = right.build() {
+                    window.paint_path(path, right_fill);
+                }
+                for x in [g.inner_left, g.inner_right] {
+                    let mut divider = PathBuilder::stroke(px(1.));
+                    divider.move_to(at(x, g.cut_y));
+                    divider.line_to(at(x, g.bottom));
+                    if let Ok(path) = divider.build() {
+                        window.paint_path(path, border);
+                    }
+                }
+            },
+        )
+        .absolute()
+        .inset_0()
+        .size_full()
+    }
+
+    fn render_mouse_diagram(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        let color = Self::button_color(MouseButton::Middle, cx);
+        let middle_selected = self.selected_button == MouseButton::Middle;
+        let middle_assigned = self.button_sound_count(MouseButton::Middle) > 0;
+        let offset = if cx.reduce_motion() {
+            0.
+        } else {
+            self.wheel_offset
+        };
+        v_flex()
+            .relative()
+            .w(rems(8.5))
+            .h(rems(12.5))
+            .flex_shrink_0()
+            .rounded_full()
+            .border_1()
+            .border_color(cx.theme().border)
+            .bg(cx.theme().background)
+            .child(self.render_click_fills(cx))
+            .child(
+                h_flex()
+                    .w_full()
+                    .h(rems(6.))
+                    .flex_shrink_0()
+                    .items_stretch()
+                    .child(self.render_click_zone(MouseButton::Left, cx))
+                    .child(
+                        HitButton::new("mouse-middle-zone")
+                            .w(rems(1.75))
+                            .h_full()
+                            .accessibility_label("Select middle click")
+                            .focus(|style| style.opacity(0.65))
+                            .tooltip(|window, cx| {
+                                Tooltip::new("Middle click · scroll here to turn the illustration")
+                                    .build(window, cx)
+                            })
+                            .child(
+                                div()
+                                    .relative()
+                                    .w(rems(0.8))
+                                    .h(rems(2.3))
                                     .rounded_full()
                                     .border_1()
-                                    .border_color(if middle_active {
+                                    .border_color(if middle_selected {
                                         cx.theme().primary
                                     } else {
-                                        cx.theme().muted_foreground.opacity(0.45)
+                                        cx.theme().border
                                     })
-                                    .bg(if middle_active {
-                                        cx.theme().primary.opacity(0.22)
+                                    .bg(if middle_assigned || middle_selected {
+                                        color.opacity(0.3)
                                     } else {
-                                        cx.theme().background
-                                    }),
+                                        cx.theme().secondary
+                                    })
+                                    .child(
+                                        canvas(
+                                            |bounds, window, _| {
+                                                (bounds, f32::from(window.rem_size()))
+                                            },
+                                            move |_, (bounds, rem), window, _| {
+                                                let width = f32::from(bounds.size.width);
+                                                let height = f32::from(bounds.size.height);
+                                                let radius = width / 2. - 1.;
+                                                if radius <= 0. {
+                                                    return;
+                                                }
+                                                for index in 0..9 {
+                                                    let y =
+                                                        (index as f32 * 0.3 + offset - 0.3) * rem;
+                                                    if y < 1. || y > height - 1. {
+                                                        continue;
+                                                    }
+                                                    let center_y = if y < radius + 1. {
+                                                        radius + 1.
+                                                    } else if y > height - radius - 1. {
+                                                        height - radius - 1.
+                                                    } else {
+                                                        y
+                                                    };
+                                                    let half_width = (radius * radius
+                                                        - (y - center_y).powi(2))
+                                                    .max(0.)
+                                                    .sqrt();
+                                                    let mut ridge = PathBuilder::stroke(px(1.));
+                                                    ridge.move_to(point(
+                                                        bounds.origin.x
+                                                            + px(width / 2. - half_width),
+                                                        bounds.origin.y + px(y),
+                                                    ));
+                                                    ridge.line_to(point(
+                                                        bounds.origin.x
+                                                            + px(width / 2. + half_width),
+                                                        bounds.origin.y + px(y),
+                                                    ));
+                                                    if let Ok(path) = ridge.build() {
+                                                        window
+                                                            .paint_path(path, color.opacity(0.55));
+                                                    }
+                                                }
+                                            },
+                                        )
+                                        .absolute()
+                                        .inset_0()
+                                        .size_full(),
+                                    ),
                             )
-                            .on_click(move |_, _, cx| {
-                                _ = middle_entity.update(cx, |view, cx| {
-                                    view.select_button(MouseButton::Middle, cx)
-                                });
-                            }),
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.select_button(MouseButton::Middle, cx)
+                            }))
+                            .on_scroll_wheel(cx.listener(
+                                |this, event: &ScrollWheelEvent, window, cx| {
+                                    this.turn_wheel(event, window, cx)
+                                },
+                            )),
                     )
-                    .child(
-                        div()
-                            .id("mouse-right-zone")
-                            .flex_1()
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .child(
-                                Label::new("RIGHT")
-                                    .text_xs()
-                                    .text_color(cx.theme().muted_foreground),
-                            )
-                            .on_click(move |_, _, cx| {
-                                _ = right_entity.update(cx, |view, cx| {
-                                    view.select_button(MouseButton::Right, cx)
-                                });
-                            }),
-                    ),
+                    .child(self.render_click_zone(MouseButton::Right, cx)),
             )
             .child(
                 div()
-                    .mx(px(1.0))
-                    .mb(px(1.0))
                     .flex_1()
+                    .w_full()
                     .border_t_1()
-                    .border_color(cx.theme().muted_foreground.opacity(0.25))
-                    .bg(cx.theme().muted.opacity(0.12)),
+                    .border_color(cx.theme().border),
             )
+    }
+
+    pub(super) fn render_mouse_canvas(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        v_flex().flex_shrink_0().px_4().py_3().gap_2().child(
+            v_flex()
+                .w_full()
+                .p_3()
+                .gap_3()
+                .rounded(cx.theme().radius_tokens().lg)
+                .border_1()
+                .border_color(cx.theme().border)
+                .bg(cx.theme().muted.opacity(0.1))
+                .child(
+                    h_flex()
+                        .w_full()
+                        .min_w_0()
+                        .items_center()
+                        .child(
+                            v_flex()
+                                .flex_1()
+                                .min_w_0()
+                                .child(self.render_button_card(MouseButton::Left, cx)),
+                        )
+                        .child(div().w(rems(1.)).h(px(1.)).bg(cx.theme().border))
+                        .child(self.render_mouse_diagram(cx))
+                        .child(
+                            v_flex()
+                                .w(rems(1.))
+                                .h(rems(8.25))
+                                .py(rems(1.75))
+                                .justify_between()
+                                .child(div().w_full().h(px(1.)).bg(cx.theme().border))
+                                .child(div().w_full().h(px(1.)).bg(cx.theme().border)),
+                        )
+                        .child(
+                            v_flex()
+                                .flex_1()
+                                .min_w_0()
+                                .gap_5()
+                                .child(self.render_button_card(MouseButton::Middle, cx))
+                                .child(self.render_button_card(MouseButton::Right, cx)),
+                        ),
+                )
+                .child(
+                    div()
+                        .text_center()
+                        .text_xs()
+                        .text_color(cx.theme().muted_foreground)
+                        .child(
+                            "Select a button to edit its sounds. Scroll over the wheel to turn it.",
+                        ),
+                ),
+        )
     }
 }

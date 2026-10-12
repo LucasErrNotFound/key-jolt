@@ -23,7 +23,7 @@ impl MouseButton {
         match self {
             Self::Left => "Left click",
             Self::Right => "Right click",
-            Self::Middle => "Middle · scroll wheel",
+            Self::Middle => "Middle click",
         }
     }
 }

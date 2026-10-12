@@ -18,7 +18,9 @@ impl MouseEditorView {
         window: &mut Window,
         cx: &mut App,
     ) -> Entity<Self> {
-        cx.new(|cx| Self::new(preset_id, preset_name, preset_data, window, cx))
+        let view = cx.new(|cx| Self::new(preset_id, preset_name, preset_data, window, cx));
+        view.update(cx, |view, cx| view.refresh_audio_details(cx));
+        view
     }
 
     pub(crate) fn set_preview_state(
@@ -88,7 +90,6 @@ impl MouseEditorView {
         } else {
             PlaybackMode::Sequential
         };
-
         let next_file_id = files.len() as u64;
 
         Self {
@@ -97,11 +98,16 @@ impl MouseEditorView {
             name_input,
             _name_subscription: name_subscription,
             initial_data,
+            bulk_undo: None,
             selected_button: MouseButton::Left,
             files,
             next_file_id,
             upload_tasks: HashMap::new(),
-            hovered_file: None,
+            show_sound_catalog: false,
+            audio_details: HashMap::new(),
+            analysis_job: None,
+            wheel_offset: 0.,
+            wheel_task: None,
             playback_mode,
             save_status: SaveStatus::Idle,
         }

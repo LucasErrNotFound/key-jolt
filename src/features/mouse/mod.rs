@@ -1,15 +1,22 @@
 mod assignment;
+mod assignment_math;
 mod attachments;
+mod audio_details;
+mod bulk_assignment;
 mod commands;
 mod diagram;
+mod diagram_geometry;
 mod discard_dialog;
 mod events;
+mod header;
+mod inspector;
 mod lifecycle;
 mod model;
 mod playback;
 mod preset;
 mod uploads;
 mod view;
+mod wheel;
 
 use self::model::{AudioFile, MouseButton};
 
@@ -28,11 +35,16 @@ pub(crate) struct MouseEditorView {
     name_input: Entity<InputState>,
     _name_subscription: Subscription,
     initial_data: MousePresetData,
+    bulk_undo: Option<assignment_math::BulkAssignmentUndo>,
     selected_button: MouseButton,
     files: Vec<AudioFile>,
     next_file_id: u64,
     upload_tasks: HashMap<u64, Task<()>>,
-    hovered_file: Option<u64>,
+    show_sound_catalog: bool,
+    audio_details: HashMap<u64, audio_details::AudioDetails>,
+    analysis_job: Option<audio_details::AnalysisJob>,
+    wheel_offset: f32,
+    wheel_task: Option<Task<()>>,
     playback_mode: PlaybackMode,
     save_status: SaveStatus,
 }

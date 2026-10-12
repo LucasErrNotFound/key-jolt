@@ -1,3 +1,4 @@
+use super::MouseEditorEvent;
 use super::MouseEditorView;
 use super::model::MouseButton;
 use gpui_kit::base::CheckboxState;
@@ -24,6 +25,9 @@ impl MouseEditorView {
         if let Some(file) = self.files.iter_mut().find(|file| file.id == id) {
             let assigned = state == CheckboxState::Checked;
             file.assigned_buttons[button.index()] = assigned;
+            if !assigned {
+                cx.emit(MouseEditorEvent::StopPreviewRequested { file_id: Some(id) });
+            }
         }
         self.update_playback_mode_for_selection_change(previous_count);
         cx.notify();

@@ -1,7 +1,7 @@
 use super::{MouseEditorEvent, MouseEditorView};
 
 use super::model::AudioFile;
-use crate::features::preset_editor::{PreviewState, UploadState};
+use crate::features::preset_editor::UploadState;
 
 use crate::features::preset_editor::{AUDIO_EXTENSIONS, is_audio_file};
 use crate::platform::file_dialog::begin_file_dialog;
@@ -61,7 +61,9 @@ impl MouseEditorView {
 
             let id = self.next_file_id;
             self.next_file_id += 1;
+            self.bulk_undo = None;
             self.files.push(AudioFile::new(id, path.clone(), name));
+            self.show_sound_catalog = true;
 
             let task = cx.spawn(async move |this, cx| {
                 let metadata = cx
@@ -106,6 +108,7 @@ impl MouseEditorView {
             self.upload_tasks.insert(id, task);
         }
 
+        self.refresh_audio_details(cx);
         cx.notify();
     }
 
@@ -144,14 +147,16 @@ impl MouseEditorView {
     pub(super) fn remove_file(&mut self, id: u64, cx: &mut Context<Self>) {
         if let Some(index) = self.files.iter().position(|file| file.id == id) {
             let previous_count = self.assigned_sound_count();
-            if self.files[index].preview_state == PreviewState::Playing {
-                cx.emit(MouseEditorEvent::StopPreviewRequested { file_id: Some(id) });
-            }
+            cx.emit(MouseEditorEvent::StopPreviewRequested { file_id: Some(id) });
+            self.bulk_undo = None;
             self.files.remove(index);
             self.upload_tasks.remove(&id);
-            if self.hovered_file == Some(id) {
-                self.hovered_file = None;
+            self.audio_details.remove(&id);
+            if let Some(job) = self.analysis_job.as_ref().filter(|job| job.id == id) {
+                job.cancelled
+                    .store(true, std::sync::atomic::Ordering::Relaxed);
             }
+            self.refresh_audio_details(cx);
             self.update_playback_mode_for_selection_change(previous_count);
             cx.notify();
         }
