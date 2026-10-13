@@ -91,6 +91,7 @@ impl RenderOnce for VolumeFader {
             )
             .child(
                 SliderThumb::new(&self.state)
+                    .cursor_pointer()
                     .disabled(disabled)
                     .axis(Axis::Vertical)
                     .absolute()

@@ -112,6 +112,7 @@ impl HomeView {
             .child(
                 Switch::new("app-status")
                     .checked(self.is_active)
+                    .cursor_pointer()
                     .on_change(cx.listener(|this, checked, _window, cx| {
                         this.is_active = *checked;
                         this.emit_settings(true, cx);
@@ -189,6 +190,7 @@ impl HomeView {
                 .disabled(!self.is_active)
                 .flex_1()
                 .min_w_0()
+                .cursor_pointer()
                 .into_any_element(),
             delete: render_delete_confirmation(cx, id, name, kind, self.is_active)
                 .into_any_element(),
@@ -208,6 +210,7 @@ impl HomeView {
             .secondary()
             .when(muted, |button| button.danger())
             .disabled(!self.is_active)
+            .cursor_pointer()
             .icon(if muted {
                 IconName::VolumeX
             } else {
@@ -236,12 +239,14 @@ impl HomeView {
                 })
                 .small()
                 .primary()
+                .cursor_pointer()
                 .icon(if keyboard {
                     IconName::Pencil
                 } else {
                     IconName::Wrench
                 })
                 .label("Edit")
+                .cursor_pointer()
                 .tooltip(if keyboard {
                     "Edit keyboard preset"
                 } else {
@@ -262,6 +267,12 @@ impl HomeView {
                 })
                 .small()
                 .secondary()
+                .cursor_pointer()
+                .tooltip(if keyboard {
+                    "Import keyboard preset"
+                } else {
+                    "Import mouse preset"
+                })
                 .disabled(!self.is_active)
                 .icon(IconName::Import)
                 .label("Import")
@@ -278,6 +289,12 @@ impl HomeView {
                     "create-mouse-preset"
                 })
                 .small()
+                .cursor_pointer()
+                .tooltip(if keyboard {
+                    "Create keyboard preset"
+                } else {
+                    "Create mouse preset"
+                })
                 .success()
                 .disabled(!self.is_active)
                 .icon(IconName::Plus)

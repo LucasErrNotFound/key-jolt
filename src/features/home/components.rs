@@ -26,6 +26,7 @@ pub(super) fn render_delete_confirmation(
     .into();
 
     Button::new(trigger_id)
+        .cursor_pointer()
         .outline()
         .danger()
         .icon(Icon::new(IconName::Trash).text_color(cx.theme().danger))
