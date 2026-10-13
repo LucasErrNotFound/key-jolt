@@ -49,8 +49,13 @@ impl RenderOnce for PlaybackSelector {
                     .pill()
                     .small()
                     .selected_index(usize::from(self.mode == PlaybackMode::Random))
-                    .child(Tab::new().label("Sequential"))
-                    .child(Tab::new().label("Random").disabled(!self.random_available))
+                    .child(Tab::new().label("Sequential").cursor_pointer())
+                    .child(
+                        Tab::new()
+                            .label("Random")
+                            .disabled(!self.random_available)
+                            .when(self.random_available, |control| control.cursor_pointer()),
+                    )
                     .when_some(self.on_change, |bar, callback| bar.on_click(callback)),
             )
     }

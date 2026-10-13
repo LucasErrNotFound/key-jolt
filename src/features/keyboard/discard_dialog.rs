@@ -19,10 +19,11 @@ impl KeyboardEditorView {
             AlertDialog::new(cx)
                 .trigger(
                     Button::new("keyboard-editor-back")
+                        .cursor_pointer()
                         .outline()
                         .icon(IconName::ArrowLeft)
                         .accessibility_label("Back to home")
-                        .tooltip("Back"),
+                        .tooltip("Back to home"),
                 )
                 .on_ok(move |_, _, cx| {
                     _ = confirm_back.update(cx, |_view, cx| {
@@ -59,6 +60,7 @@ impl KeyboardEditorView {
                                 .child(
                                     DialogClose::new().child(
                                         Button::new("keyboard-keep-editing")
+                                            .cursor_pointer()
                                             .outline()
                                             .icon(IconName::Pencil)
                                             .label("Keep editing"),
@@ -67,6 +69,7 @@ impl KeyboardEditorView {
                                 .child(
                                     DialogAction::new().child(
                                         Button::new("keyboard-discard-changes")
+                                            .cursor_pointer()
                                             .danger()
                                             .icon(IconName::ArrowLeft)
                                             .label("Discard changes"),
@@ -77,10 +80,11 @@ impl KeyboardEditorView {
                 .into_any_element()
         } else {
             Button::new("keyboard-editor-back")
+                .cursor_pointer()
                 .outline()
                 .icon(IconName::ArrowLeft)
                 .accessibility_label("Back to home")
-                .tooltip("Back")
+                .tooltip("Back to home")
                 .on_click(move |_event, _window, cx| {
                     _ = back_entity.update(cx, |_view, cx| {
                         cx.emit(KeyboardEditorEvent::BackRequested);

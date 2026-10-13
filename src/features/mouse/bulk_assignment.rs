@@ -9,6 +9,7 @@ use gpui_kit::component::dialog::{
     DialogTitle,
 };
 use gpui_kit::component::*;
+use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
 impl MouseEditorView {
@@ -56,7 +57,8 @@ impl MouseEditorView {
             .child(self.render_playback(cx))
             .child(h_flex().gap_2().items_center()
                 .child(self.render_apply_to_all(cx))
-                .child(Button::new("mouse-undo-bulk-assignment").outline().small()
+                .child(Button::new("mouse-undo-bulk-assignment")
+            .when(self.bulk_undo.is_some(), |control| control.cursor_pointer()).outline().small()
                     .label("Undo apply to all")
                     .disabled(self.bulk_undo.is_none())
                     .tooltip("Restore assignments from before the last bulk action; later sound edits clear this undo")
@@ -71,6 +73,9 @@ impl MouseEditorView {
             .map(|file| file.assigned_buttons)
             .collect();
         let trigger = Button::new("mouse-apply-to-all")
+            .when(copy_changes_assignments(&rows, source.index()), |control| {
+                control.cursor_pointer()
+            })
             .primary()
             .small()
             .label("Apply to all buttons")
@@ -103,10 +108,10 @@ impl MouseEditorView {
                     .child(
                         DialogFooter::new()
                             .child(DialogClose::new().child(
-                                Button::new("mouse-cancel-copy").outline().label("Keep assignments"),
+                                Button::new("mouse-cancel-copy").cursor_pointer().outline().label("Keep assignments"),
                             ))
                             .child(DialogAction::new().child(
-                                Button::new("mouse-confirm-copy").primary().label("Apply to all"),
+                                Button::new("mouse-confirm-copy").cursor_pointer().primary().label("Apply to all"),
                             )),
                     )
             })

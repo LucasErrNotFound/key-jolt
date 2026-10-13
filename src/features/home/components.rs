@@ -3,6 +3,7 @@ use crate::presets::PresetKind;
 use gpui_kit::assets::IconName;
 use gpui_kit::component::button::{Button, ButtonVariant, ButtonVariants};
 use gpui_kit::component::*;
+use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
 pub(super) fn render_delete_confirmation(
@@ -26,14 +27,16 @@ pub(super) fn render_delete_confirmation(
     .into();
 
     Button::new(trigger_id)
-        .cursor_pointer()
+        .when(enabled && !id.is_empty(), |control| {
+            control.cursor_pointer()
+        })
         .outline()
         .danger()
         .icon(Icon::new(IconName::Trash).text_color(cx.theme().danger))
         .size_8()
         .flex_shrink_0()
         .accessibility_label("Delete preset")
-        .tooltip("Delete preset")
+        .tooltip("Delete this preset and its sound files permanently")
         .disabled(!enabled || id.is_empty())
         .on_click(cx.listener(move |home, _, window, cx| {
             if !home.is_active || id.is_empty() {

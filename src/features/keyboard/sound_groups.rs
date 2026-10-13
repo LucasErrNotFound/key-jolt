@@ -64,6 +64,7 @@ impl KeyboardEditorView {
                 let names = self.assignment_sound_names(&group.sounds);
                 let count = group.keys.len();
                 Button::new(format!("sound-group-{}", group.index))
+                    .cursor_pointer()
                     .custom(
                         ButtonCustomVariant::new(cx)
                             .color(color.opacity(0.08))
@@ -83,7 +84,9 @@ impl KeyboardEditorView {
                         count,
                         names
                     ))
-                    .tooltip(names.clone())
+                    .tooltip(format!(
+                        "Select this group's {count} keys to edit their sounds: {names}"
+                    ))
                     .child(
                         h_flex()
                             .w_full()

@@ -102,11 +102,12 @@ impl Render for AppTitleBar {
                             .track_focus(&picker_focus)
                             .trigger(
                                 Button::new("settings")
+                                    .cursor_pointer()
                                     .ghost()
                                     .selected(self.popover_open)
                                     .icon(IconName::Settings)
                                     .accessibility_label("Settings")
-                                    .tooltip("Settings"),
+                                    .tooltip("Choose appearance, themes, and startup behavior"),
                             )
                             .child(self.appearance_picker.clone())
                             .on_open_change(cx.listener(|this, open, _, cx| {
@@ -122,10 +123,11 @@ impl Render for AppTitleBar {
                             })
                             .child(
                                 Button::new("github")
+                                    .cursor_pointer()
                                     .ghost()
                                     .icon(IconName::Github)
                                     .accessibility_label("Open KeyJolt on GitHub")
-                                    .tooltip("GitHub repository")
+                                    .tooltip("Open the KeyJolt repository on GitHub")
                                     .on_click(|_, _, cx| {
                                         cx.open_url(GITHUB_REPOSITORY_URL);
                                     }),

@@ -3,6 +3,7 @@ use super::layout::KeyboardLayout;
 use gpui_kit::component::resizable::{resizable_panel, v_resizable};
 use gpui_kit::component::scroll::ScrollableElement;
 use gpui_kit::component::tab::{Tab, TabBar};
+use gpui_kit::component::tooltip::Tooltip;
 use gpui_kit::component::*;
 use gpui_kit::*;
 
@@ -84,9 +85,9 @@ impl Render for KeyboardEditorView {
                                                                         this.set_layout(*index, cx);
                                                                     },
                                                                 ))
-                                                                .child(Tab::new().label("Full size"))
-                                                                .child(Tab::new().label("TKL"))
-                                                                .child(Tab::new().label("Compact")),
+                                                                .child(Tab::new().label("Full size").cursor_pointer().tooltip(|window, cx| Tooltip::new("Edit the full-size keyboard layout").build(window, cx)))
+                                                                .child(Tab::new().label("TKL").cursor_pointer().tooltip(|window, cx| Tooltip::new("Edit the tenkeyless keyboard layout").build(window, cx)))
+                                                                .child(Tab::new().label("Compact").cursor_pointer().tooltip(|window, cx| Tooltip::new("Edit the compact keyboard layout").build(window, cx))),
                                                         )
                                                         .child(
                                                             div()

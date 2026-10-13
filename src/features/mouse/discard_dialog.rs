@@ -19,10 +19,11 @@ impl MouseEditorView {
             AlertDialog::new(cx)
                 .trigger(
                     Button::new("mouse-editor-back")
+                        .cursor_pointer()
                         .outline()
                         .icon(IconName::ArrowLeft)
                         .accessibility_label("Back to home")
-                        .tooltip("Back"),
+                        .tooltip("Back to home"),
                 )
                 .on_ok(move |_, _, cx| {
                     _ = confirm_back.update(cx, |_view, cx| {
@@ -58,6 +59,7 @@ impl MouseEditorView {
                                 .child(
                                     DialogClose::new().child(
                                         Button::new("mouse-keep-editing")
+                                            .cursor_pointer()
                                             .outline()
                                             .icon(IconName::Pencil)
                                             .label("Keep editing"),
@@ -66,6 +68,7 @@ impl MouseEditorView {
                                 .child(
                                     DialogAction::new().child(
                                         Button::new("mouse-discard-changes")
+                                            .cursor_pointer()
                                             .danger()
                                             .icon(IconName::ArrowLeft)
                                             .label("Discard changes"),
@@ -76,10 +79,11 @@ impl MouseEditorView {
                 .into_any_element()
         } else {
             Button::new("mouse-editor-back")
+                .cursor_pointer()
                 .outline()
                 .icon(IconName::ArrowLeft)
                 .accessibility_label("Back to home")
-                .tooltip("Back")
+                .tooltip("Back to home")
                 .on_click(move |_, _, cx| {
                     _ = back_entity
                         .update(cx, |_view, cx| cx.emit(MouseEditorEvent::BackRequested));

@@ -55,9 +55,11 @@ impl KeyboardEditorView {
                             .when(!selected.is_empty(), |header| {
                                 header.child(
                                     Button::new("inspector-clear-selection")
+                                        .cursor_pointer()
                                         .ghost()
                                         .small()
                                         .label("Clear")
+                                        .tooltip("Clear selection without removing sound assignments")
                                         .on_click(cx.listener(|this, _, _, cx| {
                                             this.clear_selected_keys(cx);
                                         })),
@@ -105,6 +107,7 @@ impl KeyboardEditorView {
                             .when(!selected.is_empty() && !self.files.is_empty(), |body| {
                                 body.child(
                                     Button::new("assign-existing-sound")
+                                        .cursor_pointer()
                                         .outline()
                                         .small()
                                         .icon(IconName::Plus)
@@ -157,6 +160,7 @@ impl KeyboardEditorView {
             )
             .child(
                 Switch::new("sync-keyboard-selections")
+                    .cursor_pointer()
                     .checked(self.sync_selections)
                     .on_change(
                         cx.listener(|this, checked, _, cx| this.set_sync_selections(*checked, cx)),

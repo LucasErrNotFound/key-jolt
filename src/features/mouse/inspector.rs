@@ -47,7 +47,12 @@ impl MouseEditorView {
                     .children(assigned_rows)
                     .child(self.render_upload_area(cx))
                     .when(!self.files.is_empty(), |panel| panel.child(
-                        Button::new("mouse-toggle-sound-catalog").outline().small().w_full()
+                        Button::new("mouse-toggle-sound-catalog").cursor_pointer().outline().small().w_full()
+                            .tooltip(if self.show_sound_catalog {
+                                "Hide the catalog and show this button's assigned sounds"
+                            } else {
+                                "Show all preset sounds to assign to this button"
+                            })
                             .label(if self.show_sound_catalog { "Hide sound catalog" } else { "Show sound catalog" })
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.show_sound_catalog = !this.show_sound_catalog;

@@ -8,6 +8,8 @@ use gpui_kit::*;
 
 impl MouseEditorView {
     pub(super) fn render_header(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        let save_disabled =
+            matches!(self.save_status, SaveStatus::Saving) || !self.has_unsaved_changes(cx);
         let mapped = (0..3)
             .filter(|index| {
                 self.files.iter().any(|file| {
@@ -57,16 +59,20 @@ impl MouseEditorView {
                     )
                     .child(
                         Button::new("save-mouse-preset")
+                            .when(!save_disabled, |control| control.cursor_pointer())
                             .primary()
                             .label(match self.save_status {
                                 SaveStatus::Saving => "Saving…",
                                 SaveStatus::Failed(_) => "Retry save",
                                 SaveStatus::Idle => "Save preset",
                             })
-                            .disabled(
-                                matches!(self.save_status, SaveStatus::Saving)
-                                    || !self.has_unsaved_changes(cx),
-                            )
+                            .disabled(save_disabled)
+                            .tooltip(match self.save_status {
+                                SaveStatus::Saving => "Saving preset…",
+                                SaveStatus::Failed(_) => "Retry saving this preset",
+                                SaveStatus::Idle if save_disabled => "No preset changes to save",
+                                SaveStatus::Idle => "Save this preset and return to home",
+                            })
                             .on_click(cx.listener(|this, _, window, cx| {
                                 this.request_save(window, cx);
                             })),

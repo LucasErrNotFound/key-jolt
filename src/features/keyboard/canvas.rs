@@ -472,6 +472,7 @@ impl KeyboardEditorView {
                 let id = format!("quick-select-{}", group.id);
 
                 Button::new(id)
+                    .cursor_pointer()
                     .label(group.label)
                     .compact()
                     .selected(active)
@@ -484,6 +485,10 @@ impl KeyboardEditorView {
             }))
             .child(
                 Button::new("clear-selected-keys")
+                    .when(
+                        !self.selected_keys[self.keyboard_layout.index()].is_empty(),
+                        |control| control.cursor_pointer(),
+                    )
                     .danger()
                     .outline()
                     .compact()

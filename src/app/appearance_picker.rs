@@ -72,6 +72,8 @@ impl Render for AppearancePicker {
                 let theme_id = theme.id.clone();
                 let selected = theme_id == self.selection.theme_id;
                 Button::new(SharedString::from(format!("appearance-theme-{theme_id}")))
+                    .cursor_pointer()
+                    .tooltip(format!("Apply the {} theme", theme.display_name))
                     .ghost()
                     .w_full()
                     .flex_shrink_0()
@@ -117,6 +119,12 @@ impl Render for AppearancePicker {
                     .child(div().flex_1())
                     .child(
                         Switch::new("appearance-dark-mode")
+                            .cursor_pointer()
+                            .tooltip(if mode == AppearanceMode::Dark {
+                                "Switch to light appearance"
+                            } else {
+                                "Switch to dark appearance"
+                            })
                             .checked(mode == AppearanceMode::Dark)
                             .accessibility_label("Dark mode")
                             .on_change(cx.listener(|this, dark, _, cx| {
@@ -137,6 +145,16 @@ impl Render for AppearancePicker {
                             .child(div().flex_1())
                             .child(
                                 Switch::new("run-at-startup")
+                                    .when(!self.startup_busy && crate::platform::startup::is_supported(), |control| control.cursor_pointer())
+                                    .tooltip(if self.startup_busy {
+                                        "Saving startup preference…"
+                                    } else if !crate::platform::startup::is_supported() {
+                                        "Run at startup is available on Windows"
+                                    } else if self.run_at_startup {
+                                        "Stop KeyJolt from starting automatically when you sign in"
+                                    } else {
+                                        "Start KeyJolt in the system tray when you sign in to Windows"
+                                    })
                                     .checked(self.run_at_startup)
                                     .disabled(
                                         self.startup_busy

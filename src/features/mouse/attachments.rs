@@ -9,6 +9,7 @@ use gpui_kit::component::dialog::{
     AlertDialog, DialogAction, DialogClose, DialogDescription, DialogFooter, DialogHeader,
     DialogTitle,
 };
+use gpui_kit::component::tooltip::Tooltip;
 use gpui_kit::component::*;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
@@ -28,6 +29,7 @@ impl MouseEditorView {
         let color = Self::button_color(button, cx);
         let path = file.path.clone();
         let preview = Button::new(format!("mouse-preview-{}-{id}", u8::from(catalog)))
+            .when(ready, |control| control.cursor_pointer())
             .secondary()
             .small()
             .w(rems(1.75))
@@ -123,6 +125,7 @@ impl MouseEditorView {
                     .into_any_element()
             } else {
                 Button::new(format!("mouse-unassign-{id}"))
+                    .when(assigned, |control| control.cursor_pointer())
                     .ghost()
                     .small()
                     .icon(IconName::Close)
@@ -146,7 +149,16 @@ impl MouseEditorView {
         };
         let disabled = !matches!(file.state, UploadState::Success | UploadState::Complete);
         let entity = cx.entity().downgrade();
+        let assignment_tip = if disabled {
+            "Upload this sound successfully before assigning it"
+        } else if state == CheckboxState::Checked {
+            "Unassign this sound from the selected mouse button"
+        } else {
+            "Assign this sound to the selected mouse button"
+        };
         Checkbox::new(format!("mouse-assign-{id}"))
+            .when(!disabled, |control| control.cursor_pointer())
+            .tooltip(move |window, cx| Tooltip::new(assignment_tip).build(window, cx))
             .state(state)
             .disabled(disabled)
             .accessibility_label(format!("Assign {} to {}", file.name, button.label()))
@@ -182,6 +194,7 @@ impl MouseEditorView {
     fn render_delete_sound(&self, file: &AudioFile, cx: &mut Context<Self>) -> AnyElement {
         let id = file.id;
         let trigger = Button::new(format!("mouse-delete-sound-{id}"))
+            .cursor_pointer()
             .danger()
             .outline()
             .small()
@@ -207,8 +220,8 @@ impl MouseEditorView {
                         "{name} will be removed from all mouse buttons. Use the row's X to unassign it from only the selected button.",
                     ))))
                     .child(DialogFooter::new()
-                        .child(DialogClose::new().child(Button::new(format!("mouse-cancel-delete-{id}")).outline().label("Keep sound")))
-                        .child(DialogAction::new().child(Button::new(format!("mouse-confirm-delete-{id}")).danger().label("Delete sound"))))
+                        .child(DialogClose::new().child(Button::new(format!("mouse-cancel-delete-{id}")).cursor_pointer().outline().label("Keep sound")))
+                        .child(DialogAction::new().child(Button::new(format!("mouse-confirm-delete-{id}")).cursor_pointer().danger().label("Delete sound"))))
             }).into_any_element()
     }
 

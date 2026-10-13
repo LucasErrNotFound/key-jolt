@@ -111,8 +111,13 @@ impl HomeView {
             )
             .child(
                 Switch::new("app-status")
-                    .checked(self.is_active)
                     .cursor_pointer()
+                    .tooltip(if self.is_active {
+                        "Pause all keyboard and mouse sounds (Alt + Shift + M)"
+                    } else {
+                        "Enable keyboard and mouse sounds (Alt + Shift + M)"
+                    })
+                    .checked(self.is_active)
                     .on_change(cx.listener(|this, checked, _window, cx| {
                         this.is_active = *checked;
                         this.emit_settings(true, cx);
@@ -208,9 +213,14 @@ impl HomeView {
                 "mouse-mute-toggle"
             })
             .secondary()
+            .when(self.is_active, |control| control.cursor_pointer())
+            .tooltip(format!(
+                "{} {} sounds",
+                if muted { "Unmute" } else { "Mute" },
+                if keyboard { "keyboard" } else { "mouse" },
+            ))
             .when(muted, |button| button.danger())
             .disabled(!self.is_active)
-            .cursor_pointer()
             .icon(if muted {
                 IconName::VolumeX
             } else {
@@ -239,14 +249,15 @@ impl HomeView {
                 })
                 .small()
                 .primary()
-                .cursor_pointer()
                 .icon(if keyboard {
                     IconName::Pencil
                 } else {
                     IconName::Wrench
                 })
+                .when(self.is_active && preset.is_some(), |control| {
+                    control.cursor_pointer()
+                })
                 .label("Edit")
-                .cursor_pointer()
                 .tooltip(if keyboard {
                     "Edit keyboard preset"
                 } else {
@@ -267,14 +278,14 @@ impl HomeView {
                 })
                 .small()
                 .secondary()
-                .cursor_pointer()
-                .tooltip(if keyboard {
-                    "Import keyboard preset"
-                } else {
-                    "Import mouse preset"
-                })
                 .disabled(!self.is_active)
                 .icon(IconName::Import)
+                .when(self.is_active, |control| control.cursor_pointer())
+                .tooltip(if keyboard {
+                    "Import a keyboard preset from a ZIP file"
+                } else {
+                    "Import a mouse preset from a ZIP file"
+                })
                 .label("Import")
                 .on_click(cx.listener(move |_, _, _, cx| {
                     cx.emit(if keyboard {
@@ -289,15 +300,15 @@ impl HomeView {
                     "create-mouse-preset"
                 })
                 .small()
-                .cursor_pointer()
-                .tooltip(if keyboard {
-                    "Create keyboard preset"
-                } else {
-                    "Create mouse preset"
-                })
                 .success()
                 .disabled(!self.is_active)
                 .icon(IconName::Plus)
+                .when(self.is_active, |control| control.cursor_pointer())
+                .tooltip(if keyboard {
+                    "Create a new keyboard sound preset"
+                } else {
+                    "Create a new mouse sound preset"
+                })
                 .label("New")
                 .on_click(cx.listener(move |_, _, _, cx| {
                     cx.emit(if keyboard {

@@ -10,6 +10,7 @@ use gpui_kit::component::dialog::{
     DialogTitle,
 };
 use gpui_kit::component::spinner::Spinner;
+use gpui_kit::component::tooltip::Tooltip;
 use gpui_kit::component::*;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
@@ -34,7 +35,20 @@ impl KeyboardEditorView {
         let checkbox_entity = cx.entity().downgrade();
         let preview_entity = cx.entity().downgrade();
         let path = file.path.clone();
+        let assignment_tip = if selection.is_empty() {
+            "Select keys before assigning this sound"
+        } else if !ready {
+            "Upload this sound successfully before assigning it"
+        } else if state == CheckboxState::Checked {
+            "Unassign this sound from all selected keys"
+        } else if state == CheckboxState::Indeterminate {
+            "Assign this sound to every selected key; some already have it"
+        } else {
+            "Assign this sound to all selected keys"
+        };
         let checkbox = Checkbox::new(format!("assign-sound-{id}"))
+            .when(!disabled, |control| control.cursor_pointer())
+            .tooltip(move |window, cx| Tooltip::new(assignment_tip).build(window, cx))
             .state(state)
             .disabled(disabled)
             .accessibility_label(format!("Assign {} to selected keys", file.name))
@@ -70,6 +84,7 @@ impl KeyboardEditorView {
                     }),
             );
         let preview = Button::new(format!("preview-file-{id}"))
+            .when(ready, |control| control.cursor_pointer())
             .secondary()
             .small()
             .icon(if playing {
@@ -175,6 +190,7 @@ impl KeyboardEditorView {
                             )
                             .child(
                                 Button::new(format!("unassign-sound-{id}"))
+                                    .cursor_pointer()
                                     .ghost()
                                     .xsmall()
                                     .label("Unassign")
@@ -191,6 +207,7 @@ impl KeyboardEditorView {
     fn render_delete_sound(&self, file: &AudioFile, cx: &mut Context<Self>) -> AnyElement {
         let id = file.id;
         let button = Button::new(format!("delete-sound-{id}"))
+            .cursor_pointer()
             .danger()
             .outline()
             .small()
@@ -215,8 +232,8 @@ impl KeyboardEditorView {
                         .child(DialogTitle::new().child("Delete sound from preset?"))
                         .child(DialogDescription::new().child(format!("{} will be removed from every keyboard size. Use Unassign to remove it only from selected keys.", name))))
                         .child(DialogFooter::new()
-                            .child(DialogClose::new().child(Button::new(format!("cancel-delete-sound-{id}")).outline().label("Keep sound")))
-                            .child(DialogAction::new().child(Button::new(format!("confirm-delete-sound-{id}")).danger().label("Delete sound"))))
+                            .child(DialogClose::new().child(Button::new(format!("cancel-delete-sound-{id}")).cursor_pointer().outline().label("Keep sound")))
+                            .child(DialogAction::new().child(Button::new(format!("confirm-delete-sound-{id}")).cursor_pointer().danger().label("Delete sound"))))
                 }).into_any_element()
         } else {
             button
