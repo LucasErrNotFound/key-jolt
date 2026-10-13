@@ -32,6 +32,7 @@ impl KeyboardEditorView {
         v_flex()
             .size_full()
             .min_h_0()
+            .bg(cx.theme().secondary)
             .child(
                 v_flex()
                     .flex_shrink_0()
@@ -161,6 +162,10 @@ impl KeyboardEditorView {
                         cx.listener(|this, checked, _, cx| this.set_sync_selections(*checked, cx)),
                     ),
             );
-        v_flex().flex_shrink_0().child(playback).child(sync)
+        v_flex()
+            .flex_shrink_0()
+            .bg(cx.theme().secondary)
+            .child(playback)
+            .child(sync)
     }
 }
