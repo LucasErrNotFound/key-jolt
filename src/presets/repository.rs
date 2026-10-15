@@ -26,13 +26,19 @@ use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
 pub(crate) fn resolve_preset_id(requested: Option<&str>, is_user_preset: bool) -> String {
-    if is_user_preset && let Some(id) = requested {
+    if is_user_preset
+        && let Some(id) = requested
+        && !super::builtin::is_reserved_id(id)
+    {
         return id.to_string();
     }
     Uuid::new_v4().to_string()
 }
 
 pub(crate) fn delete_preset(root: &Path, kind: PresetKind, id: &str) -> Result<(), String> {
+    if super::builtin::is_reserved_id(id) {
+        return Err("Built-in presets cannot be deleted.".to_string());
+    }
     if root.as_os_str().is_empty() || Uuid::parse_str(id).is_err() {
         return Err("The selected preset cannot be deleted.".to_string());
     }
@@ -97,7 +103,14 @@ pub(crate) fn load_preset(root: &Path, kind: PresetKind, id: &str) -> Result<Loa
     };
     validate_preset(&preset, kind)?;
     let mut warnings = Vec::new();
-    let loaded = loaded_preset(preset, kind, &directory, &mut warnings);
+    let mut loaded = loaded_preset(preset, kind, &directory, &mut warnings);
+    if super::builtin::is_builtin_preset(kind, id) {
+        loaded.summary = loaded
+            .summary
+            .strip_prefix("Custom · ")
+            .unwrap_or(&loaded.summary)
+            .to_string();
+    }
     if warnings.is_empty() {
         Ok(loaded)
     } else {
@@ -181,6 +194,9 @@ where
     if root.as_os_str().is_empty() {
         return Err("The app data directory is unavailable.".to_string());
     }
+    if super::builtin::is_reserved_id(id) {
+        return Err("Save an edited built-in preset as a new custom preset.".to_string());
+    }
     if Uuid::parse_str(id).is_err() {
         return Err("The preset ID is invalid.".to_string());
     }
@@ -250,11 +266,10 @@ pub(super) fn save_preset_file(
 }
 
 pub(crate) fn load_presets(root: &Path) -> (Vec<LoadedPreset>, Vec<PresetWarning>) {
-    let mut presets = Vec::new();
-    let mut warnings = Vec::new();
     if root.as_os_str().is_empty() {
-        return (presets, warnings);
+        return (Vec::new(), Vec::new());
     }
+    let (mut presets, mut warnings) = super::builtin::load_all(root);
 
     for kind in [PresetKind::Keyboard, PresetKind::Mouse] {
         let kind_directory = root.join("presets").join(kind.directory());
@@ -272,6 +287,12 @@ pub(crate) fn load_presets(root: &Path) -> (Vec<LoadedPreset>, Vec<PresetWarning
         let mut seen_ids = BTreeSet::new();
         for entry in entries.iter().filter(|entry| is_zip_file(&entry.path())) {
             match load_packaged_preset(&entry.path(), kind) {
+                Ok(preset) if super::builtin::is_reserved_id(&preset.id) => {
+                    warnings.push(PresetWarning {
+                        message: "Skipped a user archive with a reserved built-in preset ID."
+                            .to_string(),
+                    });
+                }
                 Ok(preset) => {
                     seen_ids.insert(preset.id.clone());
                     presets.push(preset);
@@ -284,6 +305,12 @@ pub(crate) fn load_presets(root: &Path) -> (Vec<LoadedPreset>, Vec<PresetWarning
 
         for entry in entries.iter().filter(|entry| entry.path().is_dir()) {
             match load_legacy_preset(&entry.path(), kind, &mut warnings) {
+                Ok(Some(preset)) if super::builtin::is_reserved_id(&preset.id) => {
+                    warnings.push(PresetWarning {
+                        message: "Skipped a user folder with a reserved built-in preset ID."
+                            .to_string(),
+                    });
+                }
                 Ok(Some(preset)) if !seen_ids.contains(&preset.id) => {
                     presets.push(preset);
                 }
@@ -348,6 +375,12 @@ pub(super) fn load_preset_source(
     kind: PresetKind,
     id: &str,
 ) -> Result<Option<(PresetFile, PathBuf)>, String> {
+    if let Some(builtin) = super::builtin::load_source(root, kind, id)? {
+        return Ok(Some(builtin));
+    }
+    if super::builtin::is_reserved_id(id) {
+        return Ok(None);
+    }
     if let Some(package) = find_package_by_id(root, kind, id)? {
         let preset = read_package_manifest(&package)?;
         validate_preset(&preset, kind)?;

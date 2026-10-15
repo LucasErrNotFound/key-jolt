@@ -3,8 +3,18 @@ use crate::settings::store::AppSettings;
 
 impl HomeStartup {
     pub(crate) fn load() -> Self {
-        let (data_dir, settings, settings_warning) = crate::settings::store::load();
+        let (data_dir, mut settings, settings_warning) = crate::settings::store::load();
         let (loaded_presets, preset_warnings) = crate::presets::load_presets(&data_dir);
+        settings.active_keyboard_preset_id = crate::presets::startup_preset_id(
+            crate::presets::PresetKind::Keyboard,
+            settings.active_keyboard_preset_id.as_deref(),
+            &loaded_presets,
+        );
+        settings.active_mouse_preset_id = crate::presets::startup_preset_id(
+            crate::presets::PresetKind::Mouse,
+            settings.active_mouse_preset_id.as_deref(),
+            &loaded_presets,
+        );
         let mut startup_warnings = preset_warnings
             .into_iter()
             .map(|warning| warning.message)

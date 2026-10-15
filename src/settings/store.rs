@@ -37,8 +37,12 @@ impl Default for AppSettings {
             mouse_muted: false,
             app_enabled: true,
             run_at_startup: false,
-            active_keyboard_preset_id: Some("cherry-mx-blue".to_string()),
-            active_mouse_preset_id: Some("mouse-sounds".to_string()),
+            active_keyboard_preset_id: Some(
+                crate::presets::builtin_preset_id(crate::presets::PresetKind::Keyboard).to_string(),
+            ),
+            active_mouse_preset_id: Some(
+                crate::presets::builtin_preset_id(crate::presets::PresetKind::Mouse).to_string(),
+            ),
             appearance_mode: AppearanceMode::default(),
             appearance_theme_id: default_appearance_theme_id(),
         }

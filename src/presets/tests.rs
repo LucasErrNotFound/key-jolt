@@ -514,11 +514,11 @@ fn legacy_folder_still_loads() {
     )
     .unwrap();
     let (presets, warnings) = load_presets(&root);
-    assert_eq!(presets.len(), 1);
+    assert_eq!(presets.len(), 3);
     assert!(warnings.is_empty());
-    assert_eq!(presets[0].id, id);
-    assert_eq!(presets[0].summary, "Custom · 1 key mapped");
-    let keyboard = presets[0].keyboard.as_ref().unwrap();
+    let legacy = presets.iter().find(|preset| preset.id == id).unwrap();
+    assert_eq!(legacy.summary, "Custom · 1 key mapped");
+    let keyboard = legacy.keyboard.as_ref().unwrap();
     assert_eq!(keyboard.layout_index, 2);
     assert!(!keyboard.sync_selections);
     assert!(keyboard.selected_keys[0].is_empty());

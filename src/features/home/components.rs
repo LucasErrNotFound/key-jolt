@@ -19,6 +19,7 @@ pub(super) fn render_delete_confirmation(
     } else {
         "delete-mouse-preset"
     };
+    let builtin = crate::presets::is_builtin_preset(kind, &id);
     let entity = cx.entity().downgrade();
     let kind_name = if is_keyboard { "keyboard" } else { "mouse" };
     let description: SharedString = format!(
@@ -27,7 +28,7 @@ pub(super) fn render_delete_confirmation(
     .into();
 
     Button::new(trigger_id)
-        .when(enabled && !id.is_empty(), |control| {
+        .when(enabled && !id.is_empty() && !builtin, |control| {
             control.cursor_pointer()
         })
         .outline()
@@ -36,10 +37,14 @@ pub(super) fn render_delete_confirmation(
         .size_8()
         .flex_shrink_0()
         .accessibility_label("Delete preset")
-        .tooltip("Delete this preset and its sound files permanently")
-        .disabled(!enabled || id.is_empty())
+        .tooltip(if builtin {
+            "Built-in presets cannot be deleted; edit one to save a custom copy"
+        } else {
+            "Delete this preset and its sound files permanently"
+        })
+        .disabled(!enabled || id.is_empty() || builtin)
         .on_click(cx.listener(move |home, _, window, cx| {
-            if !home.is_active || id.is_empty() {
+            if !home.is_active || id.is_empty() || builtin {
                 return;
             }
             let entity = entity.clone();

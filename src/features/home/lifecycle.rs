@@ -40,23 +40,17 @@ impl HomeView {
             .and_then(|id| mouse_presets.iter().find(|preset| preset.id == id))
             .map(|preset| preset.id.clone())
             .unwrap_or_else(|| SharedString::from(""));
-        let keyboard_active_index = presets
-            .iter()
-            .position(|preset| preset.id == active_id)
-            .unwrap_or(0);
+        let keyboard_active_index = presets.iter().position(|preset| preset.id == active_id);
         let mouse_active_index = mouse_presets
             .iter()
-            .position(|preset| preset.id == mouse_active_id)
-            .unwrap_or(0);
+            .position(|preset| preset.id == mouse_active_id);
 
         let preset_picker = cx.new(|cx| {
             ComboboxState::new(
                 SearchableVec::new(presets.clone()),
-                if presets.is_empty() {
-                    Vec::new()
-                } else {
-                    vec![IndexPath::default().row(keyboard_active_index)]
-                },
+                keyboard_active_index
+                    .map(|index| vec![IndexPath::default().row(index)])
+                    .unwrap_or_default(),
                 window,
                 cx,
             )
@@ -77,11 +71,9 @@ impl HomeView {
         let mouse_preset_picker = cx.new(|cx| {
             ComboboxState::new(
                 SearchableVec::new(mouse_presets.clone()),
-                if mouse_presets.is_empty() {
-                    Vec::new()
-                } else {
-                    vec![IndexPath::default().row(mouse_active_index)]
-                },
+                mouse_active_index
+                    .map(|index| vec![IndexPath::default().row(index)])
+                    .unwrap_or_default(),
                 window,
                 cx,
             )

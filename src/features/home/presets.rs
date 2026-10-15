@@ -242,12 +242,13 @@ pub(super) fn append_loaded_preset(
     mouse_presets: &mut Vec<PresetChoice>,
     loaded: LoadedPreset,
 ) {
+    let builtin = crate::presets::is_builtin_preset(loaded.kind, &loaded.id);
     match loaded.kind {
         PresetKind::Keyboard => {
             if let Some(data) = loaded.keyboard {
                 let mut preset = PresetChoice::new(loaded.id, loaded.name, loaded.summary);
                 preset.data = Some(PresetData::Keyboard(data));
-                preset.is_builtin = false;
+                preset.is_builtin = builtin;
                 keyboard_presets.push(preset);
             }
         }
@@ -255,7 +256,7 @@ pub(super) fn append_loaded_preset(
             if let Some(data) = loaded.mouse {
                 let mut preset = PresetChoice::new(loaded.id, loaded.name, loaded.summary);
                 preset.data = Some(PresetData::Mouse(data));
-                preset.is_builtin = false;
+                preset.is_builtin = builtin;
                 mouse_presets.push(preset);
             }
         }
