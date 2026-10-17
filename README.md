@@ -6,21 +6,11 @@
 
 *Shape the rhythm, command the silence, and make your machine speak*
 
-<a href="https://github.com/LucasErrNotFound/key-jolt/releases">
-  <img src="https://img.shields.io/badge/Download-2563EB?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Download KeyJolt">
-</a>
-<a href="#showcase">
-  <img src="https://img.shields.io/badge/Showcase-0F766E?style=for-the-badge&amp;logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0id2hpdGUiIGQ9Ik04IDV2MTRsMTEtN3oiLz48L3N2Zz4%3D" alt="Watch demonstrations">
-</a>
-<a href="#light-mode">
-  <img src="https://img.shields.io/badge/Light_Themes-FFFFFF?style=for-the-badge&amp;logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjQiLz48cGF0aCBkPSJNMTIgMnYybTAgMTZ2Mk0yIDEyaDJtMTYgMGgyTTUgNWwxIDFtMTIgMTIgMSAxTTUgMTlsMS0xTTE4IDZsMS0xIi8%2BPC9nPjwvc3ZnPg%3D%3D" alt="Light themes — black text and sun icon on white">
-</a>
-<a href="#dark-mode">
-  <img src="https://img.shields.io/badge/Dark_Themes-000000?style=for-the-badge&amp;logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0yMC45IDEzQTkgOSAwIDAgMSAxMSAzLjEgOSA5IDAgMSAwIDIwLjkgMTN6Ii8%2BPC9zdmc%2B" alt="Dark themes — white text and moon icon on black">
-</a>
-<a href="#build-from-source">
-  <img src="https://img.shields.io/badge/Build_From_Source-A1440E?style=for-the-badge&amp;logo=rust&amp;logoColor=white" alt="Build KeyJolt from source">
-</a>
+<a href="https://github.com/LucasErrNotFound/key-jolt/releases"><img src="https://img.shields.io/badge/Download-2563EB?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Download KeyJolt"></a>
+<a href="#showcase"><img src="https://img.shields.io/badge/Showcase-0F766E?style=for-the-badge&amp;logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0id2hpdGUiIGQ9Ik04IDV2MTRsMTEtN3oiLz48L3N2Zz4%3D" alt="Watch demonstrations"></a>
+<a href="#light-mode"><img src="https://img.shields.io/badge/Light_Themes-FFFFFF?style=for-the-badge&amp;logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjQiLz48cGF0aCBkPSJNMTIgMnYybTAgMTZ2Mk0yIDEyaDJtMTYgMGgyTTUgNWwxIDFtMTIgMTIgMSAxTTUgMTlsMS0xTTE4IDZsMS0xIi8%2BPC9nPjwvc3ZnPg%3D%3D" alt="Explore light themes"></a>
+<a href="#dark-mode"><img src="https://img.shields.io/badge/Dark_Themes-000000?style=for-the-badge&amp;logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0yMC45IDEzQTkgOSAwIDAgMSAxMSAzLjEgOSA5IDAgMSAwIDIwLjkgMTN6Ii8%2BPC9zdmc%2B" alt="Explore dark themes"></a>
+<a href="#build-from-source"><img src="https://img.shields.io/badge/Build_From_Source-A1440E?style=for-the-badge&amp;logo=rust&amp;logoColor=white" alt="Build KeyJolt from source"></a>
 
 </div>
 
