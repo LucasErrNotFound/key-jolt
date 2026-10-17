@@ -6,13 +6,161 @@
 
 *Shape the rhythm, command the silence, and make your machine speak*
 
+<a href="https://github.com/LucasErrNotFound/key-jolt/releases">
+  <img src="https://img.shields.io/badge/Download-2563EB?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Download KeyJolt">
+</a>
+<a href="#showcase">
+  <img src="https://img.shields.io/badge/Showcase-0F766E?style=for-the-badge&amp;logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0id2hpdGUiIGQ9Ik04IDV2MTRsMTEtN3oiLz48L3N2Zz4%3D" alt="Watch demonstrations">
+</a>
+<a href="#light-mode">
+  <img src="https://img.shields.io/badge/Light_Themes-FFFFFF?style=for-the-badge&amp;logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjQiLz48cGF0aCBkPSJNMTIgMnYybTAgMTZ2Mk0yIDEyaDJtMTYgMGgyTTUgNWwxIDFtMTIgMTIgMSAxTTUgMTlsMS0xTTE4IDZsMS0xIi8%2BPC9nPjwvc3ZnPg%3D%3D" alt="Light themes — black text and sun icon on white">
+</a>
+<a href="#dark-mode">
+  <img src="https://img.shields.io/badge/Dark_Themes-000000?style=for-the-badge&amp;logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0yMC45IDEzQTkgOSAwIDAgMSAxMSAzLjEgOSA5IDAgMSAwIDIwLjkgMTN6Ii8%2BPC9zdmc%2B" alt="Dark themes — white text and moon icon on black">
+</a>
+<a href="#build-from-source">
+  <img src="https://img.shields.io/badge/Build_From_Source-A1440E?style=for-the-badge&amp;logo=rust&amp;logoColor=white" alt="Build KeyJolt from source">
+</a>
+
 </div>
 
 ---
 
-# Overview
+## Overview
 
 KeyJolt adds custom sound feedback to keyboard presses and mouse clicks. Pick your own audio files, save them as presets, and keep the app running in the background while using other applications. Built with GPUI-Kit.
+
+## Main screenshot
+
+The home mixer keeps keyboard and mouse presets, volume controls, and activity indicators together.
+
+![KeyJolt home mixer with separate keyboard and mouse channels in Everforest Dark](docs/images/screenshots/DARK_Everforest_Dark.png)
+
+## Showcase
+
+Short recordings will demonstrate the mixer and both preset editors. GIFs provide an inline preview; linked videos can include the actual sound feedback.
+
+### Home mixer
+
+Switch presets, adjust volume, mute either channel, and watch the activity indicators.
+
+![KeyJolt mixer demonstration in Everforest Dark](docs/gifs/DARK_Everforest_Dark_Overview.gif)
+
+### Keyboard editor
+
+Select keys, assign sounds, preview audio, and configure layout synchronization.
+
+![KeyJolt keyboard editor demonstration in Everforest Dark](docs/gifs/DARK_Gruvbox_Dark_Keyboard_Editor.gif)
+
+### Mouse editor
+
+Assign sounds to mouse buttons, preview samples, and choose a playback mode.
+
+![KeyJolt mouse editor demonstration in Everforest Dark](docs/gifs/LIGHT_Molokai_Light_Mouse_Editor.gif)
+
+## Themes
+
+Choose an appearance and theme from the settings button in the title bar. The galleries below reserve space for screenshots captured in KeyJolt itself.
+
+Theme names follow [GPUI-Kit's theme catalog](https://github.com/longbridge/gpui-kit/tree/main/themes). The choices available in a particular build depend on the theme files bundled with that build.
+
+### Light mode
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Everforest Light</strong><br>
+      <img src="docs/images/screenshots/LIGHT_Everforest_Light.png" alt="KeyJolt home mixer in Everforest Light" width="480">
+    </td>
+    <td align="center" width="50%">
+      <strong>Gruvbox Light</strong><br>
+      <img src="docs/images/screenshots/LIGHT_Gruvbox_Light.png" alt="KeyJolt home mixer in Gruvbox Light" width="480">
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Ayu Light</strong><br>
+      <img src="docs/images/screenshots/LIGHT_Ayu_Light.png" alt="KeyJolt home mixer in Ayu Light" width="480">
+    </td>
+    <td align="center" width="50%">
+      <strong>Catppuccin Latte</strong><br>
+      <img src="docs/images/screenshots/LIGHT_Catppuccin_Latte.png" alt="KeyJolt home mixer in Catppuccin Latte" width="480">
+    </td>
+  </tr>
+</table>
+
+<details>
+<summary>Browse light theme names</summary>
+
+- Default Light
+- Aurora Light
+- Ayu Light
+- Catppuccin Latte
+- Everforest Light
+- Flexoki Light
+- Gruvbox Light
+- Hybrid Light
+- macOS Classic Light
+- Mellifluous Light
+- Molokai Light
+- Solarized Light
+
+</details>
+
+### Dark mode
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Everforest Dark</strong><br>
+      <img src="docs/images/screenshots/DARK_Everforest_Dark.png" alt="KeyJolt home mixer in Everforest Dark" width="480">
+    </td>
+    <td align="center" width="50%">
+      <strong>Gruvbox Dark</strong><br>
+      <img src="docs/images/screenshots/DARK_Gruvbox_Dark.png" alt="KeyJolt home mixer in Gruvbox Dark" width="480">
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Catppuccin Mocha</strong><br>
+      <img src="docs/images/screenshots/DARK_Catppuccin_Mocha.png" alt="KeyJolt home mixer in Catppuccin Mocha" width="480">
+    </td>
+    <td align="center" width="50%">
+      <strong>Tokyo Night</strong><br>
+      <img src="docs/images/screenshots/DARK_Tokyo_Night.png" alt="KeyJolt home mixer in Tokyo Night" width="480">
+    </td>
+  </tr>
+</table>
+
+<details>
+<summary>Browse dark theme names</summary>
+
+- Default Dark
+- Adventure
+- Adventure Time
+- Alduin
+- Asciinema
+- Ayu Dark
+- Catppuccin Frappe
+- Catppuccin Macchiato
+- Catppuccin Mocha
+- Everforest Dark
+- Fahrenheit
+- Flexoki Dark
+- Gruvbox Dark
+- Harper
+- Hybrid Dark
+- Jellybeans
+- Kibble
+- macOS Classic Dark
+- Mellifluous Dark
+- Molokai Dark
+- Solarized Dark
+- Spaceduck
+- Tokyo Moon
+- Tokyo Night
+- Tokyo Storm
+- Twilight
 
 ## Features
 
@@ -113,13 +261,13 @@ Install Visual Studio 2022 Build Tools or Community with **Desktop development w
 ```powershell
 git clone https://github.com/LucasErrNotFound/key-jolt.git
 cd key-jolt
-cargo run --locked
+cargo run
 ```
 
 Build and launch the release executable:
 
 ```powershell
-cargo build --release --locked
+cargo build --release
 .\target\release\key-jolt.exe
 ```
 
@@ -187,8 +335,8 @@ Run in a graphical X11 session with a working graphics driver, audio device, and
 ```sh
 git clone https://github.com/LucasErrNotFound/key-jolt.git
 cd key-jolt
-cargo run --locked
-cargo build --release --locked
+cargo run
+cargo build --release
 ./target/release/key-jolt
 ```
 
@@ -200,7 +348,7 @@ Follow GPUI Kit's documented requirement of macOS 15 or later and install Xcode 
 xcode-select --install
 git clone https://github.com/LucasErrNotFound/key-jolt.git
 cd key-jolt
-cargo run --locked
+cargo run
 ```
 
 Grant Accessibility permission as described above and restart if global sounds remain unavailable.
@@ -214,7 +362,7 @@ Grant Accessibility permission as described above and restart if global sounds r
 | Preview works, global sounds do not | Check saved assignments, macOS Accessibility permission, and Linux session type. Use X11 on Linux. |
 | The app disappeared after closing | Choose **Open KeyJolt** from its tray menu. Use **Exit** there to stop it. |
 | Import fails | Choose a KeyJolt ZIP of the matching kind and read the in-app message. Malformed packages and unsafe archive paths are rejected. |
-| A console still opens on Windows | Rebuild with `cargo build --release --locked` and launch `target/release/key-jolt.exe`. Older/debug executables can still use the console subsystem. |
+| A console still opens on Windows | Rebuild with `cargo build --release` and launch `target/release/key-jolt.exe`. Older/debug executables can still use the console subsystem. |
 | Theme JSON is missing during compilation | Restore the repository's `assets/themes/` files; they are compile-time inputs. |
 | Startup did not run after signing in | Check that Run at startup finished saving, the executable still exists at its registered location, and Windows Task Manager has not disabled KeyJolt in Startup apps. Open it manually after moving a portable folder. |
 | Startup preference cannot be saved | Read the in-app error. Check that app-data storage is writable and the executable path is valid. An overly long path may require moving KeyJolt to a shorter location. |
@@ -248,8 +396,8 @@ Run checks from the repository root:
 
 ```sh
 cargo fmt --check
-cargo clippy --locked --all-targets -- -D warnings
-cargo test --locked --all-targets
+cargo clippy --all-targets -- -D warnings
+cargo test --all-targets
 ```
 
 Tests cover input/selection logic, settings, and preset persistence. Native dialogs, tray behavior, audio devices, and visual interactions also need manual checks on each OS. Report bugs through [GitHub Issues](https://github.com/LucasErrNotFound/key-jolt/issues), including OS/session, reproduction steps, expected/actual behavior, and any in-app error.
