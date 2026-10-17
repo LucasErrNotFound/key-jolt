@@ -3,7 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 use uuid::Uuid;
 
-const MOUSE_PACKAGE: &[u8] = include_bytes!("../../assets/presets/WTTG2Click.zip");
+const MOUSE_PACKAGE: &[u8] = include_bytes!("../../assets/presets/DefaultMouseClick.zip");
 
 struct TestRoot(PathBuf);
 
@@ -29,14 +29,25 @@ fn bundles_load_as_two_real_presets_with_original_mappings() {
         .iter()
         .find(|preset| preset.kind == PresetKind::Keyboard)
         .unwrap();
-    assert_eq!(keyboard.name, "WTTG2");
+    assert_eq!(keyboard.name, "BoxJades");
     assert!(is_builtin_preset(keyboard.kind, &keyboard.id));
     let data = keyboard.keyboard.as_ref().unwrap();
     assert_eq!(data.layout_index, 0);
     assert!(data.sync_selections);
     assert!(data.random_playback);
-    assert_eq!(data.files.len(), 9);
+    assert_eq!(data.files.len(), 4);
     assert!(data.files.iter().all(|file| file.path.is_file()));
+    let names = data
+        .files
+        .iter()
+        .map(|file| file.name.as_ref())
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(
+        names,
+        ["Key1.ogg", "Key2.ogg", "Key3.ogg", "Key4.ogg"]
+            .into_iter()
+            .collect()
+    );
     for (layout, expected) in [102, 85, 74].into_iter().enumerate() {
         let assigned = data
             .files
@@ -59,16 +70,19 @@ fn bundles_load_as_two_real_presets_with_original_mappings() {
     assert!(
         keyboard_bindings
             .values()
-            .all(|(_, sounds)| !sounds.is_empty() && sounds.iter().all(|path| path.is_file()))
+            .all(|(mode, sounds)| *mode == PlaybackMode::Random
+                && sounds.len() == 4
+                && sounds.iter().all(|path| path.is_file()))
     );
     let mouse = presets
         .iter()
         .find(|preset| preset.kind == PresetKind::Mouse)
         .unwrap();
-    assert_eq!(mouse.name, "WTTG2Click");
+    assert_eq!(mouse.name, "DefaultMouseClick");
     let data = mouse.mouse.as_ref().unwrap();
     assert_eq!(data.files.len(), 1);
     assert_eq!(data.files[0].assigned_buttons, [true; 3]);
+    assert_eq!(data.files[0].name.as_ref(), "Default_Mouse_Click.ogg");
     assert!(!data.random_playback);
     let mouse_bindings = runtime_bindings(&root.0, PresetKind::Mouse, &mouse.id).unwrap();
     assert_eq!(mouse_bindings.len(), 3);

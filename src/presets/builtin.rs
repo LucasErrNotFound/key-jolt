@@ -11,8 +11,8 @@ use zip::ZipArchive;
 
 const KEYBOARD_ID: &str = "c772e030-794c-49b2-a4cc-758d81795df4";
 const MOUSE_ID: &str = "df4dce3d-b060-4db7-89b9-f2fd603f5824";
-const KEYBOARD_PACKAGE: &[u8] = include_bytes!("../../assets/presets/WTTG2.zip");
-const MOUSE_PACKAGE: &[u8] = include_bytes!("../../assets/presets/WTTG2Click.zip");
+const KEYBOARD_PACKAGE: &[u8] = include_bytes!("../../assets/presets/BoxJades.zip");
+const MOUSE_PACKAGE: &[u8] = include_bytes!("../../assets/presets/DefaultMouseClick.zip");
 static CACHE_LOCK: Mutex<()> = Mutex::new(());
 
 pub(crate) fn builtin_preset_id(kind: PresetKind) -> &'static str {
