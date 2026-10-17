@@ -152,6 +152,8 @@ Theme names follow [GPUI-Kit's theme catalog](https://github.com/longbridge/gpui
 - Tokyo Storm
 - Twilight
 
+</details>
+
 ## Features
 
 - Create, edit, select, import, and delete keyboard and mouse presets.
