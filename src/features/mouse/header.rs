@@ -38,8 +38,12 @@ impl MouseEditorView {
                             .child(
                                 Input::new(&self.name_input)
                                     .id("mouse-preset-name")
+                                    .large()
                                     .w_full()
+                                    .h_12()
+                                    .py_2()
                                     .text_lg()
+                                    .line_height(rems(1.5))
                                     .font_semibold()
                                     .aria_label("Mouse preset name"),
                             )
